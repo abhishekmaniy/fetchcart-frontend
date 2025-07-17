@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, ExternalLink, Heart, Compare, ArrowLeft } from "lucide-react";
+import { Star, ExternalLink, Heart, GitCompare, ArrowLeft } from "lucide-react";
 
 interface SearchResultsProps {
   results: any;
@@ -80,7 +80,7 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
                     <Heart className="h-4 w-4" />
                   </Button>
                   <Button size="icon" variant="ghost">
-                    <Compare className="h-4 w-4" />
+                    <GitCompare className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
