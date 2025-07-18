@@ -7,6 +7,7 @@ import SearchInterface from "@/components/SearchInterface";
 import SearchResults from "@/components/SearchResults";
 import AIShoppingAssistant from "@/components/AIShoppingAssistant";
 import HistorySidebar from "@/components/HistorySidebar";
+import TrendsAnalytics from "@/components/features/TrendsAnalytics";
 import { 
   ShoppingCart, 
   History, 
@@ -60,7 +61,12 @@ const Dashboard = () => {
                 </Button>
               </HistorySidebar>
               
-              <Button variant="outline" size="sm" className="hidden md:flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="hidden md:flex items-center space-x-2"
+                onClick={() => window.location.href = '/community'}
+              >
                 <Users className="h-4 w-4" />
                 <span>Community</span>
               </Button>
@@ -146,21 +152,7 @@ const Dashboard = () => {
           )}
 
           {activeTab === 'trends' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-6 w-6" />
-                  <span>Shopping Trends & Analytics</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-xl font-semibold mb-2">Coming Soon</h3>
-                  <p>Advanced analytics and market trends will be available here.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <TrendsAnalytics />
           )}
         </div>
       </main>

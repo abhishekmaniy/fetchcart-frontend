@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +12,16 @@ import {
   ChevronRight,
   Sparkles
 } from "lucide-react";
+import SmartRecommendations from "./features/SmartRecommendations";
+import PriceTrends from "./features/PriceTrends";
+import DealAlerts from "./features/DealAlerts";
+import AuthenticityCheck from "./features/AuthenticityCheck";
+import QuickCompare from "./features/QuickCompare";
+import BudgetOptimizer from "./features/BudgetOptimizer";
 
 const AIShoppingAssistant = () => {
+  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+  
   const features = [
     {
       icon: Brain,
@@ -97,6 +106,7 @@ const AIShoppingAssistant = () => {
               <Button 
                 variant="ghost" 
                 className="w-full justify-between group-hover:bg-primary/10 group-hover:text-primary transition-all"
+                onClick={() => setActiveFeature(feature.title)}
               >
                 {feature.action}
                 <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -123,8 +133,29 @@ const AIShoppingAssistant = () => {
         <div className="text-center space-y-2">
           <div className="text-2xl font-bold text-primary">4.9</div>
           <div className="text-sm text-muted-foreground">Satisfaction Score</div>
+          </div>
         </div>
       </div>
+
+      {/* Feature Components */}
+      {activeFeature && (
+        <div className="mt-8">
+          <Button 
+            variant="outline" 
+            onClick={() => setActiveFeature(null)}
+            className="mb-6"
+          >
+            ← Back to Features
+          </Button>
+          
+          {activeFeature === "Smart Recommendations" && <SmartRecommendations />}
+          {activeFeature === "Price Trends" && <PriceTrends />}
+          {activeFeature === "Deal Alerts" && <DealAlerts />}
+          {activeFeature === "Authenticity Check" && <AuthenticityCheck />}
+          {activeFeature === "Quick Compare" && <QuickCompare />}
+          {activeFeature === "Budget Optimizer" && <BudgetOptimizer />}
+        </div>
+      )}
     </div>
   );
 };
