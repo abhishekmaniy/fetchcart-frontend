@@ -1,7 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, ExternalLink, Heart, GitCompare, ArrowLeft } from "lucide-react";
+import { Star, ExternalLink, Heart, GitCompare, ArrowLeft, ShoppingCart } from "lucide-react";
+import { useState } from "react";
+import ProductComparisonModal from "./ProductComparisonModal";
 
 interface SearchResultsProps {
   results: any;
@@ -9,9 +11,23 @@ interface SearchResultsProps {
 }
 
 const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
+  const [comparisonModal, setComparisonModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const handleBuyNow = (product: any) => {
+    setSelectedProduct(product);
+    setComparisonModal(true);
+  };
+
+  const handleCompare = (product: any) => {
+    setSelectedProduct(product);
+    setComparisonModal(true);
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <>
+      <div className="space-y-6">
+        {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" onClick={onNewSearch}>
@@ -87,11 +103,19 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
 
               {/* Actions */}
               <div className="flex space-x-2 pt-2">
-                <Button className="flex-1">
+                <Button 
+                  className="flex-1 group hover:scale-105 transition-transform duration-200" 
+                  onClick={() => handleBuyNow(product)}
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2 group-hover:animate-bounce" />
                   Buy Now
-                  <ExternalLink className="h-4 w-4 ml-2" />
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 hover:scale-105 transition-transform duration-200"
+                  onClick={() => handleCompare(product)}
+                >
+                  <GitCompare className="h-4 w-4 mr-2" />
                   Compare
                 </Button>
               </div>
@@ -100,13 +124,27 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
         ))}
       </div>
 
-      {/* Load More */}
-      <div className="text-center pt-8">
-        <Button variant="outline" size="lg">
-          Load More Results
-        </Button>
+        {/* Load More */}
+        <div className="text-center pt-8">
+          <Button variant="outline" size="lg">
+            Load More Results
+          </Button>
+        </div>
       </div>
-    </div>
+
+      {/* Product Comparison Modal */}
+      <ProductComparisonModal
+        isOpen={comparisonModal}
+        onClose={() => setComparisonModal(false)}
+        initialProduct={selectedProduct}
+        searchResults={results.products}
+        pastSearches={[
+          "Best wireless headphones under $200",
+          "Ergonomic office chair for home",
+          "Gaming laptop with RTX 4060"
+        ]}
+      />
+    </>
   );
 };
 
