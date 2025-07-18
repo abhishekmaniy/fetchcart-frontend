@@ -133,11 +133,9 @@ const AIShoppingAssistant = () => {
         <div className="text-center space-y-2">
           <div className="text-2xl font-bold text-primary">4.9</div>
           <div className="text-sm text-muted-foreground">Satisfaction Score</div>
-          </div>
         </div>
       </div>
 
-      {/* Feature Components */}
       {activeFeature && (
         <div className="mt-8">
           <Button 
