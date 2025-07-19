@@ -26,6 +26,13 @@ const QuickCompare = () => {
   const [searchQueries, setSearchQueries] = useState(["", ""]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isComparing, setIsComparing] = useState(false);
+  const [searchHistory] = useState([
+    "Sony WH-1000XM4 Wireless Headphones",
+    "Apple AirPods Pro (2nd Gen)",
+    "Bose QuietComfort 45",
+    "iPhone 15 Pro Max",
+    "Samsung Galaxy S24 Ultra"
+  ]);
   const { toast } = useToast();
 
   const mockProducts: Product[] = [
@@ -125,30 +132,52 @@ const QuickCompare = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {searchQueries.map((query, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <div className="flex-1">
-                <Label htmlFor={`product-${index}`}>Product {index + 1}</Label>
-                <Input
-                  id={`product-${index}`}
-                  placeholder="Enter product name or URL..."
-                  value={query}
-                  onChange={(e) => {
-                    const newQueries = [...searchQueries];
-                    newQueries[index] = e.target.value;
-                    setSearchQueries(newQueries);
-                  }}
-                />
+            <div key={index} className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <div className="flex-1">
+                  <Label htmlFor={`product-${index}`}>Product {index + 1}</Label>
+                  <Input
+                    id={`product-${index}`}
+                    placeholder="Enter product name or URL..."
+                    value={query}
+                    onChange={(e) => {
+                      const newQueries = [...searchQueries];
+                      newQueries[index] = e.target.value;
+                      setSearchQueries(newQueries);
+                    }}
+                  />
+                </div>
+                {searchQueries.length > 2 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeProduct(index)}
+                    className="mt-6"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              {searchQueries.length > 2 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeProduct(index)}
-                  className="mt-6"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-              )}
+              
+              {/* Quick selection from search history */}
+              <div className="flex flex-wrap gap-1">
+                <span className="text-xs text-muted-foreground mr-2">Quick select:</span>
+                {searchHistory.slice(0, 3).map((item, historyIndex) => (
+                  <Button
+                    key={historyIndex}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => {
+                      const newQueries = [...searchQueries];
+                      newQueries[index] = item;
+                      setSearchQueries(newQueries);
+                    }}
+                  >
+                    {item.length > 20 ? item.substring(0, 20) + "..." : item}
+                  </Button>
+                ))}
+              </div>
             </div>
           ))}
 

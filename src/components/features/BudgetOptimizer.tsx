@@ -26,6 +26,7 @@ interface OptimizedProduct {
 const BudgetOptimizer = () => {
   const [budget, setBudget] = useState([500]);
   const [category, setCategory] = useState("");
+  const [timeframe, setTimeframe] = useState("month");
   const [priorities, setPriorities] = useState({
     price: 70,
     quality: 20,
@@ -34,6 +35,7 @@ const BudgetOptimizer = () => {
   const [optimizedProducts, setOptimizedProducts] = useState<OptimizedProduct[]>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [totalSpent, setTotalSpent] = useState(0);
+  const [savingsGoal, setSavingsGoal] = useState([100]);
   const { toast } = useToast();
 
   const mockProducts: OptimizedProduct[] = [
@@ -182,22 +184,54 @@ const BudgetOptimizer = () => {
             </div>
           </div>
 
-          {/* Category Selection */}
+          {/* Budget Timeframe */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="category">Product Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Electronics">Electronics</SelectItem>
+                  <SelectItem value="Home & Kitchen">Home & Kitchen</SelectItem>
+                  <SelectItem value="Furniture">Furniture</SelectItem>
+                  <SelectItem value="Clothing">Clothing</SelectItem>
+                  <SelectItem value="Sports">Sports & Outdoors</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="timeframe">Budget Timeframe</Label>
+              <Select value={timeframe} onValueChange={setTimeframe}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select timeframe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">Weekly</SelectItem>
+                  <SelectItem value="month">Monthly</SelectItem>
+                  <SelectItem value="quarter">Quarterly</SelectItem>
+                  <SelectItem value="year">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Savings Goal */}
           <div>
-            <Label htmlFor="category">Product Category</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Electronics">Electronics</SelectItem>
-                <SelectItem value="Home & Kitchen">Home & Kitchen</SelectItem>
-                <SelectItem value="Furniture">Furniture</SelectItem>
-                <SelectItem value="Clothing">Clothing</SelectItem>
-                <SelectItem value="Sports">Sports & Outdoors</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Savings Goal: ${savingsGoal[0]} per {timeframe}</Label>
+            <div className="mt-2">
+              <Slider
+                value={savingsGoal}
+                onValueChange={setSavingsGoal}
+                max={500}
+                min={10}
+                step={10}
+                className="w-full"
+              />
+            </div>
           </div>
 
           {/* Priority Sliders */}
@@ -276,7 +310,7 @@ const BudgetOptimizer = () => {
               <CardTitle>Optimization Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">${totalSpent.toFixed(2)}</div>
                   <div className="text-sm text-muted-foreground">Total Spent</div>
@@ -292,6 +326,24 @@ const BudgetOptimizer = () => {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{getAverageValueScore()}</div>
                   <div className="text-sm text-muted-foreground">Avg Value Score</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">${savingsGoal[0]}</div>
+                  <div className="text-sm text-muted-foreground">{timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Goal</div>
+                </div>
+              </div>
+              
+              {/* Savings Progress */}
+              <div className="mt-6 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Savings Progress</span>
+                  <span>{Math.round((getTotalSavings() / savingsGoal[0]) * 100)}% of goal</span>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((getTotalSavings() / savingsGoal[0]) * 100, 100)}%` }}
+                  ></div>
                 </div>
               </div>
             </CardContent>

@@ -2,12 +2,19 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Eye, Heart, ShoppingCart, Calendar, Users, Percent } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, Heart, ShoppingCart, Calendar, Users, Percent, Link, Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const TrendsAnalytics = () => {
   const [timeframe, setTimeframe] = useState("week");
   const [category, setCategory] = useState("all");
+  const [productUrl, setProductUrl] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
+  const { toast } = useToast();
 
   const trendingProducts = [
     {
@@ -104,6 +111,38 @@ const TrendsAnalytics = () => {
     return num.toString();
   };
 
+  const analyzePriceTrend = async () => {
+    if (!productUrl.trim()) {
+      toast({
+        title: "URL Required",
+        description: "Please enter a product URL to analyze price trends.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    
+    // Mock price history data
+    const mockHistory = [
+      { date: "2024-01-01", price: 299.99 },
+      { date: "2024-01-15", price: 279.99 },
+      { date: "2024-02-01", price: 259.99 },
+      { date: "2024-02-15", price: 249.99 },
+      { date: "2024-03-01", price: 239.99 },
+      { date: "2024-03-15", price: 219.99 }
+    ];
+    
+    setPriceHistory(mockHistory);
+    setIsAnalyzing(false);
+    toast({
+      title: "Analysis Complete!",
+      description: "Price trend analysis is ready."
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -115,6 +154,85 @@ const TrendsAnalytics = () => {
           Real-time insights into shopping trends and market dynamics
         </p>
       </div>
+
+      {/* Price Trend Analysis */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Link className="h-5 w-5" />
+            <span>Product Price Trend Analysis</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="product-url">Product URL</Label>
+            <Input
+              id="product-url"
+              placeholder="Paste any product URL to analyze its price history..."
+              value={productUrl}
+              onChange={(e) => setProductUrl(e.target.value)}
+            />
+          </div>
+          <Button 
+            onClick={analyzePriceTrend}
+            disabled={isAnalyzing}
+            className="w-full"
+          >
+            {isAnalyzing ? (
+              <>
+                <Search className="h-4 w-4 mr-2 animate-spin" />
+                Analyzing price trends...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4 mr-2" />
+                Analyze Price Trend
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Price History Results */}
+      {priceHistory.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Price History & Prediction</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">${priceHistory[priceHistory.length - 1]?.price}</div>
+                  <div className="text-sm text-muted-foreground">Current Price</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">-26.7%</div>
+                  <div className="text-sm text-muted-foreground">Price Drop</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">${priceHistory[0]?.price}</div>
+                  <div className="text-sm text-muted-foreground">Highest Price</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">Next Week</div>
+                  <div className="text-sm text-muted-foreground">Best Time to Buy</div>
+                </div>
+              </div>
+              
+              <div className="bg-secondary/30 p-4 rounded-lg">
+                <h4 className="font-semibold mb-2">Price Trend Insights</h4>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>• Price has been steadily declining over the past 3 months</li>
+                  <li>• Predicted to reach lowest point next week ($199.99)</li>
+                  <li>• Historical data shows prices typically rise after seasonal sales</li>
+                  <li>• 89% chance of further price drops in the next 7 days</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>

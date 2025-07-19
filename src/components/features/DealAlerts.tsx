@@ -27,6 +27,33 @@ const DealAlerts = () => {
     discountPercent: "",
     alertType: "price"
   });
+  const [searchHistory] = useState([
+    "Sony WH-1000XM4 Wireless Headphones",
+    "Apple iPhone 15 Pro Max", 
+    "Samsung Galaxy Watch",
+    "MacBook Air M3",
+    "AirPods Pro 2nd Gen"
+  ]);
+  const [currentDeals] = useState([
+    {
+      id: "deal1",
+      name: "Sony WH-1000XM4",
+      originalPrice: 349.99,
+      currentPrice: 279.99,
+      discount: 20,
+      endsIn: "2 days",
+      store: "Amazon"
+    },
+    {
+      id: "deal2", 
+      name: "Apple Watch Series 9",
+      originalPrice: 399.99,
+      currentPrice: 329.99,
+      discount: 17.5,
+      endsIn: "5 hours",
+      store: "Best Buy"
+    }
+  ]);
   const [alerts, setAlerts] = useState<Alert[]>([
     {
       id: "1",
@@ -127,6 +154,36 @@ const DealAlerts = () => {
           Never miss a great deal - get notified when products reach your target price
         </p>
       </div>
+
+      {/* Current Deals Based on Search History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Tag className="h-5 w-5" />
+            <span>New Deals for You</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {currentDeals.map((deal) => (
+              <div key={deal.id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                <div>
+                  <h4 className="font-semibold">{deal.name}</h4>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <span className="text-lg font-bold text-primary">${deal.currentPrice}</span>
+                    <span className="text-muted-foreground line-through">${deal.originalPrice}</span>
+                    <Badge className="bg-green-500">{deal.discount}% OFF</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {deal.store} • Ends in {deal.endsIn}
+                  </div>
+                </div>
+                <Button size="sm">View Deal</Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Create New Alert */}
       <Card>
