@@ -12,6 +12,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import SignInPage from './components/SigninPage/SignInPage'
 import SignUpPage from './components/SigninPage/SignUpPage'
 import VerifyPage from './components/VerifyPage/VerifyPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const queryClient = new QueryClient()
 
@@ -26,13 +27,39 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path='/' element={<Index />} />
-            <Route path='/dashboard' element={<Dashboard />} />
-            <Route path='/checkout' element={<Checkout />} />
-            <Route path='/community' element={<Community />} />
             <Route path='/signin' element={<SignInPage />} />
             <Route path='/signup' element={<SignUpPage />} />
-            <Route path='/user/:userId/verify/:token'  element={<VerifyPage/>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route
+              path='/user/:userId/verify/:token'
+              element={<VerifyPage />}
+            />
+
+            {/* Protected Routes */}
+            <Route
+              path='/dashboard'
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/checkout'
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/community'
+              element={
+                <ProtectedRoute>
+                  <Community />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path='*' element={<NotFound />} />
           </Routes>
         </BrowserRouter>

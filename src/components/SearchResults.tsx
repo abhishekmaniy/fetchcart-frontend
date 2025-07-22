@@ -89,7 +89,7 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
 
           {/* Results Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-            {results.products.map((product: any, idx: number) => (
+            {results?.products.map((product: any, idx: number) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 40 }}

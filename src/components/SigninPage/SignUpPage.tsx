@@ -15,8 +15,9 @@ import Header from '../Header'
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
 import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
-import type { User, UserInputManual, UserInputGoogle } from '../../../types'
-
+import type { User, UserInputManual, UserInputGoogle } from '../../types'
+import { useUserStore } from '@/store/userStore'
+import { Loader2 } from 'lucide-react'
 
 type ManualFormValues = {
   username: string
@@ -29,7 +30,6 @@ type Payload =
   | { type: 'manual'; user: UserInputManual }
 
 const SignUpPage = () => {
-  // const navigate = useNavigate()
   const form = useForm<ManualFormValues>({
     defaultValues: {
       username: '',
@@ -42,16 +42,18 @@ const SignUpPage = () => {
   const [msgType, setMsgType] = useState<'success' | 'error' | 'info'>('info')
   const [loading, setLoading] = useState(false)
 
+  const { setUser, setToken } = useUserStore()
+
   const handleLogin = async (googleCredential?: CredentialResponse) => {
     setLoading(true)
     setMsg('')
+
     try {
       let payload: Payload
 
       if (googleCredential?.credential) {
         const googleDecoded = jwtDecode<any>(googleCredential.credential)
 
-        // Defensive extraction
         const name = googleDecoded?.name ?? 'Google User'
         const email = googleDecoded?.email
         const picture = googleDecoded?.picture
@@ -65,11 +67,7 @@ const SignUpPage = () => {
 
         payload = {
           type: 'google',
-          user: {
-            name,
-            email,
-            imageUrl: picture
-          }
+          user: { name, email, imageUrl: picture }
         }
       } else {
         const userData = form.getValues()
@@ -93,7 +91,10 @@ const SignUpPage = () => {
 
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/user/create`,
-        payload
+        payload,
+        {
+          withCredentials: true
+        }
       )
 
       const data: {
@@ -104,18 +105,21 @@ const SignUpPage = () => {
       setMsg(data.message || 'Signup complete.')
       setMsgType('success')
 
+      if (data.user) {
+        setUser(data.user)
+      }
+
       if (payload.type === 'google') {
-        // If using react-router:
-        // navigate('/dashboard')
         window.location.href = '/dashboard'
       } else {
         form.reset()
-        // Stay on page; user must verify email.
+        // Email verification required for manual signup
       }
     } catch (error: any) {
       console.error('Signup failed:', error)
       const apiMessage =
-        error?.response?.data?.message || 'Something went wrong. Please try again.'
+        error?.response?.data?.message ||
+        'Something went wrong. Please try again.'
       setMsg(apiMessage)
       setMsgType('error')
     } finally {
@@ -128,7 +132,6 @@ const SignUpPage = () => {
       <Header />
       <div className='flex flex-1 items-center justify-center'>
         <div className='relative bg-white shadow-2xl rounded-2xl p-10 w-full max-w-md overflow-hidden'>
-          {/* Decorative blobs */}
           <div className='absolute -top-16 -left-16 w-60 h-60 bg-gradient-to-br from-indigo-400 via-pink-300 to-yellow-200 opacity-20 blur-2xl rounded-full z-0' />
           <div className='absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tr from-yellow-300 via-pink-200 to-purple-300 opacity-20 blur-2xl rounded-full z-0' />
 
@@ -175,7 +178,11 @@ const SignUpPage = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type='email' placeholder='you@example.com' {...field} />
+                        <Input
+                          type='email'
+                          placeholder='you@example.com'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -185,7 +192,10 @@ const SignUpPage = () => {
                 <FormField
                   control={form.control}
                   name='password'
-                  rules={{ required: 'Password is required', minLength: { value: 6, message: 'Min 6 chars' } }}
+                  rules={{
+                    required: 'Password is required',
+                    minLength: { value: 6, message: 'Min 6 chars' }
+                  }}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
@@ -203,13 +213,13 @@ const SignUpPage = () => {
 
                 {msg && (
                   <div
-                    className={
+                    className={`text-sm ${
                       msgType === 'error'
-                        ? 'text-red-600 text-sm'
+                        ? 'text-red-600'
                         : msgType === 'success'
-                        ? 'text-green-600 text-sm'
-                        : 'text-gray-600 text-sm'
-                    }
+                        ? 'text-green-600'
+                        : 'text-gray-600'
+                    }`}
                   >
                     {msg}
                   </div>
@@ -218,8 +228,9 @@ const SignUpPage = () => {
                 <Button
                   type='submit'
                   disabled={loading}
-                  className='w-full bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='w-full bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
                 >
+                  {loading && <Loader2 className='w-4 h-4 animate-spin' />}
                   {loading ? 'Please wait…' : 'Sign Up'}
                 </Button>
               </form>
