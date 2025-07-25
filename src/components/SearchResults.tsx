@@ -1,46 +1,59 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Star,
   ExternalLink,
   Heart,
   GitCompare,
   ArrowLeft,
-  ShoppingCart,
-} from "lucide-react";
-import { useState } from "react";
-import ProductComparisonModal from "./ProductComparisonModal";
-import { motion } from "framer-motion";
+  ShoppingCart
+} from 'lucide-react'
+import { useState } from 'react'
+import ProductComparisonModal from './ProductComparisonModal'
+import { motion } from 'framer-motion'
+import ProductModel from './SmartSearch/ProductModel'
 
 interface SearchResultsProps {
-  results: any;
-  onNewSearch: () => void;
+  results: any
+  onNewSearch: () => void
 }
 
 const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
-  const [comparisonModal, setComparisonModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [comparisonModal, setComparisonModal] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [showProductModal, setShowProductModal] = useState(false)
+
+  const handleCardClick = (product: any) => {
+    setSelectedProduct(product)
+    setShowProductModal(true)
+  }
 
   const handleBuyNow = (product: any) => {
-    setSelectedProduct(product);
-    setComparisonModal(true);
-  };
+    setSelectedProduct(product)
+    setComparisonModal(true)
+  }
 
   const handleCompare = (product: any) => {
-    setSelectedProduct(product);
-    setComparisonModal(true);
-  };
+    setSelectedProduct(product)
+    setComparisonModal(true)
+  }
+
+  console.log(results)
 
   return (
     <>
-      <section className="relative py-12">
+      <section className='relative py-12'>
         {/* Animated Colorful Background */}
-        <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className='absolute inset-0 -z-10 pointer-events-none'>
           <motion.div
             initial={{ scale: 0.8, opacity: 0.5 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-            className="absolute -top-32 -left-32 w-[350px] h-[350px] rounded-full bg-gradient-to-br from-pink-400 via-indigo-400 to-blue-400 opacity-20 blur-2xl"
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatType: 'reverse'
+            }}
+            className='absolute -top-32 -left-32 w-[350px] h-[350px] rounded-full bg-gradient-to-br from-pink-400 via-indigo-400 to-blue-400 opacity-20 blur-2xl'
           />
           <motion.div
             initial={{ scale: 0.7, opacity: 0.4 }}
@@ -48,10 +61,10 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
             transition={{
               duration: 2.5,
               repeat: Infinity,
-              repeatType: "reverse",
-              delay: 1,
+              repeatType: 'reverse',
+              delay: 1
             }}
-            className="absolute top-1/2 right-0 w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-yellow-300 via-pink-300 to-purple-400 opacity-20 blur-2xl"
+            className='absolute top-1/2 right-0 w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-yellow-300 via-pink-300 to-purple-400 opacity-20 blur-2xl'
           />
           <motion.div
             initial={{ scale: 0.9, opacity: 0.3 }}
@@ -59,115 +72,149 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
             transition={{
               duration: 2.2,
               repeat: Infinity,
-              repeatType: "reverse",
-              delay: 0.5,
+              repeatType: 'reverse',
+              delay: 0.5
             }}
-            className="absolute bottom-0 left-1/2 w-[200px] h-[200px] rounded-full bg-gradient-to-tl from-green-300 via-blue-300 to-indigo-400 opacity-10 blur-2xl"
+            className='absolute bottom-0 left-1/2 w-[200px] h-[200px] rounded-full bg-gradient-to-tl from-green-300 via-blue-300 to-indigo-400 opacity-10 blur-2xl'
           />
         </div>
 
-        <div className="space-y-6 relative z-10">
+        <div className='space-y-6 relative z-10'>
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" onClick={onNewSearch}>
-                <ArrowLeft className="h-5 w-5" />
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center space-x-4'>
+              <Button variant='ghost' size='icon' onClick={onNewSearch}>
+                <ArrowLeft className='h-5 w-5' />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-700 via-pink-600 to-yellow-500 bg-clip-text text-transparent">
+                <h1 className='text-2xl font-bold bg-gradient-to-r from-indigo-700 via-pink-600 to-yellow-500 bg-clip-text text-transparent'>
                   Search Results
                 </h1>
-                <p className="text-muted-foreground">
+                <p className='text-muted-foreground'>
                   Found {results.products.length} products for "{results.query}"
                 </p>
               </div>
             </div>
-            <Button onClick={onNewSearch} className="bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white shadow">
+            <Button
+              onClick={onNewSearch}
+              className='bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white shadow'
+            >
               New Search
             </Button>
           </div>
 
           {/* Results Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+          <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4'>
             {results?.products.map((product: any, idx: number) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.08, duration: 0.6, type: "spring" }}
-                className="bg-white/90 border border-indigo-100 rounded-2xl p-6 hover:shadow-2xl transition-shadow group relative overflow-hidden"
+                transition={{
+                  delay: 0.1 + idx * 0.08,
+                  duration: 0.6,
+                  type: 'spring'
+                }}
+                className='bg-white/90 border border-indigo-100 rounded-2xl p-6 hover:shadow-2xl transition-shadow group relative overflow-hidden cursor-pointer'
+                onClick={() => handleCardClick(product)} // open modal on card click
               >
                 {/* Product Image */}
-                <div className="aspect-square bg-secondary/30 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                <div className='aspect-square bg-secondary/30 rounded-lg mb-4 flex items-center justify-center overflow-hidden'>
                   <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                    src={product.image || '/placeholder.png'}
+                    alt={product.productName || 'Product'}
+                    className='w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300'
                   />
                 </div>
 
                 {/* Product Info */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-lg leading-tight bg-gradient-to-r from-indigo-600 via-pink-500 to-yellow-400 bg-clip-text text-transparent">
-                    {product.name}
+                <div className='space-y-3'>
+                  <h3 className='font-semibold text-lg leading-tight bg-gradient-to-r from-indigo-600 via-pink-500 to-yellow-400 bg-clip-text text-transparent'>
+                    {product.productName || 'Unnamed Product'}
                   </h3>
 
                   {/* Rating */}
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="ml-1 text-sm font-medium">{product.rating}</span>
+                  {(product.rating || product.reviews) && (
+                    <div className='flex items-center space-x-2'>
+                      {product.rating && (
+                        <div className='flex items-center'>
+                          <Star className='h-4 w-4 text-yellow-400 fill-current' />
+                          <span className='ml-1 text-sm font-medium'>
+                            {product.rating}
+                          </span>
+                        </div>
+                      )}
+                      {product.reviews && (
+                        <span className='text-sm text-muted-foreground'>
+                          ({product.reviews} reviews)
+                        </span>
+                      )}
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      ({product.reviews} reviews)
-                    </span>
-                  </div>
+                  )}
 
                   {/* Price */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-primary">{product.price}</span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-muted-foreground line-through">
-                        {product.originalPrice}
+                  {product.price ? (
+                    <div className='flex items-center space-x-2'>
+                      <span className='text-2xl font-bold text-primary'>
+                        {product.price}
                       </span>
-                    )}
-                    {product.savings && (
-                      <Badge variant="secondary" className="text-green-600">
-                        Save {product.savings}
-                      </Badge>
-                    )}
-                  </div>
+                      {product.originalPrice && (
+                        <span className='text-sm text-muted-foreground line-through'>
+                          {product.originalPrice}
+                        </span>
+                      )}
+                      {product.savings && (
+                        <Badge variant='secondary' className='text-green-600'>
+                          Save {product.savings}
+                        </Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <div className='text-sm text-muted-foreground italic'>
+                      Price not available
+                    </div>
+                  )}
 
                   {/* Store */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Sold by {product.store}
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm text-muted-foreground'>
+                      Sold by {product.store || 'Unknown Store'}
                     </span>
-                    <div className="flex space-x-2">
-                      <Button size="icon" variant="ghost">
-                        <Heart className="h-4 w-4" />
+                    <div className='flex space-x-2'>
+                      <Button size='icon' variant='ghost'>
+                        <Heart className='h-4 w-4' />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleCompare(product)}>
-                        <GitCompare className="h-4 w-4" />
+                      <Button
+                        size='icon'
+                        variant='ghost'
+                        onClick={() => handleCompare(product)}
+                      >
+                        <GitCompare className='h-4 w-4' />
                       </Button>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex space-x-2 pt-2">
+                  <div className='flex space-x-2 pt-2'>
                     <Button
-                      className="flex-1 group hover:scale-105 transition-transform duration-200 bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white"
-                      onClick={() => handleBuyNow(product)}
+                      className='flex-1 ...'
+                      onClick={e => {
+                        e.stopPropagation() // prevent card click
+                        handleBuyNow(product)
+                      }}
                     >
-                      <ShoppingCart className="h-4 w-4 mr-2 group-hover:animate-bounce" />
+                      <ShoppingCart className='h-4 w-4 mr-2 group-hover:animate-bounce' />
                       Buy Now
                     </Button>
                     <Button
-                      variant="outline"
-                      className="flex-1 hover:scale-105 transition-transform duration-200"
-                      onClick={() => handleCompare(product)}
+                      size='icon'
+                      variant='ghost'
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleCompare(product)
+                      }}
                     >
-                      <GitCompare className="h-4 w-4 mr-2" />
+                      <GitCompare className='h-4 w-4 mr-2' />
                       Compare
                     </Button>
                   </div>
@@ -177,8 +224,12 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
           </div>
 
           {/* Load More */}
-          <div className="text-center pt-8">
-            <Button variant="outline" size="lg" className="hover:bg-pink-50 hover:border-pink-300 transition-colors">
+          <div className='text-center pt-8'>
+            <Button
+              variant='outline'
+              size='lg'
+              className='hover:bg-pink-50 hover:border-pink-300 transition-colors'
+            >
               Load More Results
             </Button>
           </div>
@@ -192,13 +243,18 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
         initialProduct={selectedProduct}
         searchResults={results.products}
         pastSearches={[
-          "Best wireless headphones under $200",
-          "Ergonomic office chair for home",
-          "Gaming laptop with RTX 4060",
+          'Best wireless headphones under $200',
+          'Ergonomic office chair for home',
+          'Gaming laptop with RTX 4060'
         ]}
       />
+      <ProductModel
+        open={showProductModal}
+        onClose={() => setShowProductModal(false)}
+        product={selectedProduct}
+      />
     </>
-  );
-};
+  )
+}
 
-export default SearchResults;
+export default SearchResults

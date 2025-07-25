@@ -1,26 +1,20 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import SearchInterface from '@/components/SearchInterface'
-import SearchResults from '@/components/SearchResults'
-import AIShoppingAssistant from '@/components/AIShoppingAssistant'
-import TrendsAnalytics from '@/components/features/TrendsAnalytics'
-import {
-  ShoppingCart,
-  History,
-  Sparkles,
-  TrendingUp,
-  Users,
-  Bell,
-  Menu,
-  Home,
-  Search
-} from 'lucide-react'
-import { motion } from 'framer-motion'
-import HistorySidebar from '@/components/SmartSearch/HistorySidebar'
 import Header from '@/components/SmartSearch/Header'
+import MainContent from '@/components/SmartSearch/MainContent'
+import Sidebar from '@/components/SmartSearch/Sidebar'
 import { useUserStore } from '@/store/userStore'
+import { Alert, AssistantFeature } from '@/types'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
+
+const newAlert: Alert = {
+  id: 'alert-001',
+  productName: 'Sony WH-1000XM4 Wireless Headphones',
+  productUrl: 'https://www.amazon.com/dp/B08MVCLBYF',
+  currentPrice: 279.99,
+  targetPrice: 250.0,
+  isActive: true,
+  createdAt: '2025-07-20T10:15:00Z'
+}
 
 const Dashboard = () => {
   const [searchResults, setSearchResults] = useState(null)
@@ -28,13 +22,15 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'search' | 'assistant' | 'trends'>(
     'search'
   )
-  const {user} = useUserStore()
+  const [activeFeature, setActiveFeature] = useState<AssistantFeature | null>(
+    null
+  )
 
-  console.log(user)
+  const { user } = useUserStore()
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-indigo-100'>
-      {/* Animated Colorful Background */}
+      {/* Animated Background */}
       <div className='absolute inset-0 -z-10 pointer-events-none'>
         <motion.div
           initial={{ scale: 0.8, opacity: 0.5 }}
@@ -65,64 +61,44 @@ const Dashboard = () => {
           className='absolute bottom-0 left-1/2 w-[250px] h-[250px] rounded-full bg-gradient-to-tl from-green-300 via-blue-300 to-indigo-400 opacity-10 blur-2xl'
         />
       </div>
-      {/* Header */}
-      <Header/>
 
-      <main className='max-w-7xl mx-auto px-6 py-8'>
-        {/* Quick Stats */}
+      <Header />
 
-        {/* Tab Navigation */}
-        <div className='flex space-x-1 mb-8 p-1 bg-secondary/50 rounded-xl w-fit'>
-          <Button
-            variant={activeTab === 'search' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('search')}
-            className='rounded-lg transition-all'
-          >
-            <Search className='h-4 w-4 mr-2' />
-            Smart Search
-          </Button>
-          <Button
-            variant={activeTab === 'assistant' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('assistant')}
-            className='rounded-lg transition-all'
-          >
-            <Sparkles className='h-4 w-4 mr-2' />
-            AI Assistant
-          </Button>
-          <Button
-            variant={activeTab === 'trends' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('trends')}
-            className='rounded-lg transition-all'
-          >
-            <TrendingUp className='h-4 w-4 mr-2' />
-            Trends
-          </Button>
-        </div>
+      {/* Main Layout: Sidebar + Content */}
+      <div className='max-w-7xl mx-auto px-6 py-8 flex'>
+        {/* Sidebar */}
+        <Sidebar
+          activeFeature={activeFeature}
+          setActiveFeature={setActiveFeature}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
 
-        {/* Content Area */}
-        <div className='space-y-8'>
-          {activeTab === 'search' && (
-            <div>
-              {searchResults ? (
-                <SearchResults
-                  results={searchResults}
-                  onNewSearch={() => setSearchResults(null)}
-                />
-              ) : (
-                <SearchInterface
-                  onSearchComplete={setSearchResults}
-                  isSearching={isSearching}
-                  setIsSearching={setIsSearching}
-                />
-              )}
-            </div>
-          )}
-
-          {activeTab === 'assistant' && <AIShoppingAssistant />}
-
-          {activeTab === 'trends' && <TrendsAnalytics />}
-        </div>
-      </main>
+        {/* Main Content */}
+        <MainContent
+          alerts={[]}
+          authResult={[]}
+          compareProducts={[]}
+          compareProductsHandler={() => {}}
+          comparedResults={[]}
+          createAlert={() => {}}
+          isComparing={false}
+          isCreatingAlert={false}
+          isSearching={isSearching}
+          newAlert={newAlert}
+          removeCompareProduct={() => {}}
+          setAuthResult={() => {}}
+          setBudget={() => {}}
+          setCompareProducts={() => {}}
+          setIsSearching={setIsSearching}
+          setNewAlert={() => {}}
+          setSearchResults={setSearchResults}
+          history={[]}
+          searchResults={searchResults}
+          activeFeature={activeFeature}
+          activeTab={activeTab}
+        />
+      </div>
     </div>
   )
 }

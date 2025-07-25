@@ -30,22 +30,32 @@ const SearchInterface = ({
     setSearchPhase('searching')
 
     // Simulate internet search
-    await new Promise(resolve => setTimeout(resolve, 3000))
-
-    // Move to form generation phase
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/search/generate-form`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ query: searchQuery })
+      }
+    )
+    const { formSchema } = await response.json()
+    console.log(formSchema)
+    setGeneratedForm(formSchema)
     setSearchPhase('form')
-    setGeneratedForm({
-      budget: { min: 0, max: 1000 },
-      category: 'electronics',
-      preferences: ['quality', 'reviews', 'warranty']
-    })
   }
 
-  const handleFormSubmit = async (formData: any) => {
+  const handleFormSubmit = async (rawFormData: any) => {
     setSearchPhase('fetching')
     setIsSearching(true)
 
     try {
+      const filteredFormData = Object.fromEntries(
+        Object.entries(rawFormData).filter(([key]) =>
+          generatedForm?.some(field => field.name === key)
+        )
+      )
+
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/search/create`,
         {
@@ -56,7 +66,7 @@ const SearchInterface = ({
           credentials: 'include',
           body: JSON.stringify({
             query: searchQuery,
-            filters: formData
+            filters: filteredFormData
           })
         }
       )
@@ -69,50 +79,6 @@ const SearchInterface = ({
       onSearchComplete(resultData)
     } catch (error) {
       console.error('Search error:', error)
-
-      // Optional: fallback to mock data during development
-      // Uncomment below to test UI without backend
-      // const mockResults = {
-      //   query: searchQuery,
-      //   products: [
-      //     {
-      //       id: 1,
-      //       name: 'Sony WH-1000XM5 Wireless Headphones',
-      //       price: '$349.99',
-      //       originalPrice: '$399.99',
-      //       image: '/placeholder.svg',
-      //       rating: 4.8,
-      //       reviews: 2847,
-      //       store: 'Amazon',
-      //       savings: '$50.00'
-      //     },
-      //     {
-      //       id: 2,
-      //       name: 'Bose QuietComfort 45',
-      //       price: '$279.99',
-      //       originalPrice: '$329.99',
-      //       image: '/placeholder.svg',
-      //       rating: 4.6,
-      //       reviews: 1923,
-      //       store: 'Best Buy',
-      //       savings: '$50.00'
-      //     },
-      //     {
-      //       id: 3,
-      //       name: 'Apple AirPods Max',
-      //       price: '$479.99',
-      //       originalPrice: '$549.99',
-      //       image: '/placeholder.svg',
-      //       rating: 4.7,
-      //       reviews: 3421,
-      //       store: 'Apple Store',
-      //       savings: '$70.00'
-      //     }
-      //   ]
-      // }
-
-      // onSearchComplete(mockResults)
-
       onSearchComplete({ error: 'Something went wrong. Please try again.' })
     } finally {
       setIsSearching(false)
@@ -129,6 +95,7 @@ const SearchInterface = ({
         query={searchQuery}
         onSubmit={handleFormSubmit}
         onBack={() => setSearchPhase('input')}
+        formSchema={generatedForm}
       />
     )
   }
