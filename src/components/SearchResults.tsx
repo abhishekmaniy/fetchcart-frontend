@@ -12,6 +12,7 @@ import { useState } from 'react'
 import ProductComparisonModal from './ProductComparisonModal'
 import { motion } from 'framer-motion'
 import ProductModel from './SmartSearch/ProductModel'
+import { useUserStore } from '@/store/userStore'
 
 interface SearchResultsProps {
   results: any
@@ -22,6 +23,7 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
   const [comparisonModal, setComparisonModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showProductModal, setShowProductModal] = useState(false)
+  const { user } = useUserStore()
 
   const handleCardClick = (product: any) => {
     setSelectedProduct(product)

@@ -1,10 +1,36 @@
-import { History, ShoppingCart, Sparkles, Users } from 'lucide-react'
+import {
+  History,
+  ShoppingCart,
+  Sparkles,
+  Users,
+  LogOut,
+} from 'lucide-react'
 import React from 'react'
 import { Badge } from '../ui/badge'
 import HistorySidebar from './HistorySidebar'
 import { Button } from '../ui/button'
+import { useUserStore } from '@/store/userStore'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const Header = () => {
+  const { isAuthenticated, logout } = useUserStore()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/user/logout`,
+        {},
+        { withCredentials: true }
+      )
+      logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout failed', error)
+    }
+  }
+
   return (
     <header className='border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50'>
       <div className='max-w-7xl mx-auto px-6 py-4'>
@@ -45,6 +71,26 @@ const Header = () => {
               <Users className='h-4 w-4' />
               <span>Community</span>
             </Button>
+
+            {isAuthenticated ? (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='flex items-center space-x-1'
+                onClick={handleLogout}
+              >
+                <LogOut className='h-4 w-4' />
+                <span className='hidden md:inline'>Log Out</span>
+              </Button>
+            ) : (
+              <Button
+                size='sm'
+                onClick={() => navigate('/signin')}
+                className='bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white shadow'
+              >
+                Sign In
+              </Button>
+            )}
 
             <Button
               size='sm'

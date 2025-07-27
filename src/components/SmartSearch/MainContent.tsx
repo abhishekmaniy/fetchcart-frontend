@@ -1,14 +1,14 @@
-import React from 'react'
+import React, { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import TrendsAnalytics from '../features/TrendsAnalytics'
 import SearchInterface from '../SearchInterface'
 import SearchResults from '../SearchResults'
 import QuickCompare from '../features/QuickCompare'
-
-import { Search, Alert, Deal, ComparedProduct } from '@/types'
 import DealAlerts from './AiAssistant/DealAlerts'
 import SmartRecommendations from '../features/SmartRecommendations'
+import { useUserStore } from '@/store/userStore'
+import { Search, Alert, ComparedProduct } from '@/types'
 
-// Define possible tabs
 export type Tab = 'search' | 'assistant' | 'trends'
 
 interface MainContentProps {
@@ -58,15 +58,30 @@ const MainContent: React.FC<MainContentProps> = ({
   setBudget,
   history
 }) => {
+  const { user } = useUserStore()
+  const [searchParams] = useSearchParams()
+  const searchId = searchParams.get('searchId')
+
+  const searchFromStore = useMemo(() => {
+    return user?.searches?.find(s => s.id === searchId)
+  }, [searchId, user?.searches])
+
   return (
     <main className='flex-1 px-6 py-8'>
       <div className='space-y-8'>
         {activeTab === 'search' && (
           <>
-            {searchResults ? (
+            {searchFromStore ? (
               <SearchResults
-                results={searchResults}
-                onNewSearch={() => setSearchResults(null)}
+                key={searchId}
+                results={searchFromStore}
+                onNewSearch={() => {
+                  const newUrl = new URL(window.location.href)
+                  newUrl.searchParams.delete('searchId')
+                  window.history.replaceState({}, '', newUrl.toString())
+                  // Optional: trigger reactivity
+                  window.dispatchEvent(new PopStateEvent('popstate'))
+                }}
               />
             ) : (
               <SearchInterface
@@ -81,13 +96,6 @@ const MainContent: React.FC<MainContentProps> = ({
         {activeTab === 'assistant' && (
           <>
             {activeFeature === 'compare' && <QuickCompare />}
-            {/* {activeFeature === 'summarize' && <ReviewSummarizer />}
-            {activeFeature === 'priceTrack' && (
-              <PriceTracker
-                authResult={authResult}
-                setAuthResult={setAuthResult}
-              />
-            )} */}
             {activeFeature === 'deals' && (
               <DealAlerts
                 currentDeals={[]}
@@ -98,15 +106,7 @@ const MainContent: React.FC<MainContentProps> = ({
                 alerts={alerts}
               />
             )}
-            {activeFeature === 'recommendations' && (
-              <SmartRecommendations
-                // budget={budget}
-                // setBudget={setBudget}
-                // timeframe={timeframe}
-                // setTimeframe={setTimeframe}
-              />
-            )}
-
+            {activeFeature === 'recommendations' && <SmartRecommendations />}
             {!activeFeature && (
               <div className='text-muted'>
                 Select a feature from the sidebar.

@@ -1,4 +1,3 @@
-// TOP UNCHANGED IMPORTS
 import { useState, useMemo } from 'react'
 import {
   Sheet,
@@ -13,7 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useUserStore } from '@/store/userStore'
 
-// Types
 interface HistoryItem {
   id: string
   query: string
@@ -30,25 +28,19 @@ interface HistorySidebarProps {
 
 const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
   const { user } = useUserStore()
-
   const [filter, setFilter] = useState<'all' | 'favorites' | 'recent'>('all')
+  const [open, setOpen] = useState(false)
 
   const parsedSearches: HistoryItem[] = useMemo(() => {
     const searches = user?.searches ?? []
-
-    return searches.map(search => {
-      const timestamp = new Date(search.createdAt || Date.now())
-      const relatedProducts = search.products ?? []
-
-      return {
-        id: search.id,
-        query: search.query || 'Untitled',
-        timestamp,
-        resultsCount: relatedProducts.length,
-        isFavorite: search.isFavorite ?? false,
-        category: undefined
-      }
-    })
+    return searches.map(search => ({
+      id: search.id,
+      query: search.query || 'Untitled',
+      timestamp: new Date(search.createdAt || Date.now()),
+      resultsCount: search.products?.length || 0,
+      isFavorite: search.isFavorite ?? false,
+      category: undefined
+    }))
   }, [user])
 
   const getTimeAgo = (timestamp: Date) => {
@@ -57,7 +49,6 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
     const minutes = Math.floor(diff / (1000 * 60))
     const hours = Math.floor(diff / (1000 * 60 * 60))
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
     if (minutes < 60) return `${minutes}m ago`
     if (hours < 24) return `${hours}h ago`
     return `${days}d ago`
@@ -66,23 +57,40 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
   const filteredHistory = parsedSearches.filter(item => {
     if (filter === 'favorites') return item.isFavorite
     if (filter === 'recent')
-      return (
-        new Date().getTime() - item.timestamp.getTime() < 24 * 60 * 60 * 1000
-      )
+      return new Date().getTime() - item.timestamp.getTime() < 24 * 60 * 60 * 1000
     return true
   })
 
   const toggleFavorite = (id: string) => {
     console.log('Toggle favorite for:', id)
+    // TODO: Update Zustand store or send PATCH request
   }
 
   const deleteHistoryItem = (id: string) => {
     console.log('Delete history item:', id)
+    // TODO: Remove from Zustand or send DELETE request
+  }
+
+  const handleHistoryItemClick = (item: HistoryItem) => {
+    // update URL with searchId
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.set('searchId', item.id)
+    window.history.pushState({}, '', newUrl.toString())
+
+    
+
+    // trigger any callback
+    onSelectHistory?.(item)
+
+    // close sidebar
+    setOpen(false)
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>{children}</SheetTrigger>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild onClick={() => setOpen(true)}>
+        {children}
+      </SheetTrigger>
       <SheetContent side='left' className='w-96 p-0'>
         <SheetHeader className='p-6 pb-4 border-b'>
           <SheetTitle className='flex items-center space-x-2'>
@@ -94,11 +102,7 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
         {/* Filter Buttons */}
         <div className='p-4 border-b bg-secondary/20'>
           <div className='flex space-x-2'>
-            <Button
-              size='sm'
-              variant={filter === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilter('all')}
-            >
+            <Button size='sm' variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
               All
             </Button>
             <Button
@@ -129,16 +133,14 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
               <div className='text-center py-8 text-muted-foreground'>
                 <Search className='h-12 w-12 mx-auto mb-3 opacity-50' />
                 <p>No search history found</p>
-                <p className='text-sm'>
-                  Start searching to see your history here
-                </p>
+                <p className='text-sm'>Start searching to see your history here</p>
               </div>
             ) : (
               filteredHistory.map(item => (
                 <div
                   key={item.id}
                   className='group bg-card border rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/50'
-                  onClick={() => onSelectHistory?.(item)}
+                  onClick={() => handleHistoryItemClick(item)}
                 >
                   <div className='flex items-start justify-between mb-2'>
                     <div className='flex-1 min-w-0'>
@@ -172,9 +174,7 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
                       >
                         <Star
                           className={`h-3 w-3 ${
-                            item.isFavorite
-                              ? 'text-yellow-400 fill-current'
-                              : ''
+                            item.isFavorite ? 'text-yellow-400 fill-current' : ''
                           }`}
                         />
                       </Button>

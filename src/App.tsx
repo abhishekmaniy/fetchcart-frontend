@@ -68,6 +68,15 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              {/* <Route
+                path='/'
+                element={
+                  <ProtectedRoute>
+                    <SmartSearch />
+                  </ProtectedRoute>
+                }
+              /> */}
+
               <Route
                 path='/checkout'
                 element={
@@ -84,7 +93,6 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-
               {/* 404 */}
               <Route path='*' element={<NotFound />} />
             </Routes>

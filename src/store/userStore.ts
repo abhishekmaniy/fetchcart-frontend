@@ -6,8 +6,6 @@ interface UserState {
   user: User | null
   token: Token | null
   isAuthenticated: boolean
-  searches: Search[] | null
-  products: Product[] | null
 
   setUser: (user: User) => void
   clearUser: () => void
@@ -17,46 +15,42 @@ interface UserState {
 
   setIsAuthenticated: (auth: boolean) => void
 
+  addSearchWithProducts: (search: Search, products: Product[]) => void
   logout: () => void
 }
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
-      searches: null,
-      products: null,
 
-      setUser: (user) =>
-        set({
-          user,
-          searches: user.searches ?? null,
-          products: user.searches
-            ? user.searches.flatMap((s) => s.products || [])
-            : null
-        }),
+      setUser: (user) => set({ user }),
 
-      clearUser: () =>
-        set({
-          user: null,
-          searches: null,
-          products: null
-        }),
+      clearUser: () => set({ user: null }),
 
       setToken: (token) => set({ token }),
       clearToken: () => set({ token: null }),
 
       setIsAuthenticated: (auth) => set({ isAuthenticated: auth }),
 
+      addSearchWithProducts: (search, products) => {
+        const currentUser = get().user
+        if (!currentUser) return
+
+        const updatedSearch = { ...search, products }
+        const updatedSearches = [...(currentUser.searches || []), updatedSearch]
+
+        const updatedUser = { ...currentUser, searches: updatedSearches }
+        set({ user: updatedUser })
+      },
+
       logout: () =>
         set({
           user: null,
           token: null,
-          isAuthenticated: false,
-          searches: null,
-          products: null
+          isAuthenticated: false
         })
     }),
     {
@@ -64,9 +58,7 @@ export const useUserStore = create<UserState>()(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        isAuthenticated: state.isAuthenticated,
-        searches: state.searches,
-        products: state.products
+        isAuthenticated: state.isAuthenticated
       })
     }
   )

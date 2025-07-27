@@ -153,15 +153,29 @@ const Header = () => {
                 FAQ
               </a>
               <div className='flex flex-col space-y-2 pt-4'>
-                <Button variant='ghost' onClick={() => navigate('/signin')}>
-                  Sign In
-                </Button>
-                <Button
-                  onClick={() => navigate('/dashboard')}
-                  className='bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white shadow hover:scale-105 transition-transform'
-                >
-                  Try Now
-                </Button>
+                {!isAuthenticated ? (
+                  <>
+                    <Button variant='ghost' onClick={() => navigate('/signin')}>
+                      Sign In
+                    </Button>
+                    <Button
+                      onClick={() => navigate('/dashboard')}
+                      className='bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white shadow hover:scale-105 transition-transform'
+                    >
+                      Try Now
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleLogout}
+                      variant='ghost'
+                      className='text-red-500 hover:text-red-700'
+                    >
+                      Log Out <LogOut className='ml-2 w-4 h-4' />
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>

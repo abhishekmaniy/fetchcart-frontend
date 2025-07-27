@@ -5,6 +5,7 @@ import { Search, Sparkles, Globe, Brain, ShoppingBag } from 'lucide-react'
 import SearchLoadingAnimation from '@/components/SearchLoadingAnimation'
 import AIFormGenerator from '@/components/AIFormGenerator'
 import { motion } from 'framer-motion'
+import { useUserStore } from '@/store/userStore'
 
 interface SearchInterfaceProps {
   onSearchComplete: (results: any) => void
@@ -22,6 +23,7 @@ const SearchInterface = ({
     'input' | 'searching' | 'form' | 'fetching'
   >('input')
   const [generatedForm, setGeneratedForm] = useState(null)
+  const { user } = useUserStore()
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -71,11 +73,25 @@ const SearchInterface = ({
         }
       )
 
+      const resultData = await response.json()
+
       if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`)
+        throw new Error(
+          resultData.error || `Request failed: ${response.status}`
+        )
       }
 
-      const resultData = await response.json()
+      const { addSearchWithProducts } = useUserStore.getState()
+      if (resultData.search && resultData.products) {
+        addSearchWithProducts(resultData.search, resultData.products)
+      }
+
+      if (resultData.search?.id) {
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.set('searchId', resultData.search.id)
+        window.history.pushState({}, '', newUrl.toString())
+      }
+
       onSearchComplete(resultData)
     } catch (error) {
       console.error('Search error:', error)
