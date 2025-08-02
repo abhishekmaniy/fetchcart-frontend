@@ -13,7 +13,7 @@ import { useUserStore } from '@/store/userStore'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const Header = () => {
+const Header = ({ setSelectedSearch }: { setSelectedSearch: (item:string) => void }) => {
   const { isAuthenticated, logout } = useUserStore()
   const navigate = useNavigate()
 
@@ -51,7 +51,7 @@ const Header = () => {
           </div>
 
           <div className='flex items-center space-x-4'>
-            <HistorySidebar>
+            <HistorySidebar setSelectedSearch={setSelectedSearch} >
               <Button
                 variant='outline'
                 size='sm'

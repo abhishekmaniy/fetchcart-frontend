@@ -15,6 +15,7 @@ import VerifyPage from './components/VerifyPage/VerifyPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 import AuthProvider from './components/AuthProvider'
+import Search from './pages/Search'
 
 const queryClient = new QueryClient()
 
@@ -90,6 +91,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Community />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/search/:searchId'
+                element={
+                  <ProtectedRoute>
+                    <Search />
                   </ProtectedRoute>
                 }
               />

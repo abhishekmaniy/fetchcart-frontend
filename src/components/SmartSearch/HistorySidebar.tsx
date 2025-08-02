@@ -23,10 +23,10 @@ interface HistoryItem {
 
 interface HistorySidebarProps {
   children: React.ReactNode
-  onSelectHistory?: (item: HistoryItem) => void
+  setSelectedSearch?: (item: string) => void
 }
 
-const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
+const HistorySidebar = ({ children, setSelectedSearch }: HistorySidebarProps) => {
   const { user } = useUserStore()
   const [filter, setFilter] = useState<'all' | 'favorites' | 'recent'>('all')
   const [open, setOpen] = useState(false)
@@ -77,10 +77,8 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
     newUrl.searchParams.set('searchId', item.id)
     window.history.pushState({}, '', newUrl.toString())
 
-    
-
     // trigger any callback
-    onSelectHistory?.(item)
+    setSelectedSearch(item.id)
 
     // close sidebar
     setOpen(false)
@@ -127,8 +125,8 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
         </div>
 
         {/* History Items */}
-        <ScrollArea className='flex-1'>
-          <div className='p-4 space-y-3'>
+        <ScrollArea className='flex-1 h-[calc(100vh-220px)] overflow-y-auto custom-scroll'>
+          <div className='space-y-3 px-4 pt-2 pb-4'>
             {filteredHistory.length === 0 ? (
               <div className='text-center py-8 text-muted-foreground'>
                 <Search className='h-12 w-12 mx-auto mb-3 opacity-50' />
@@ -173,9 +171,8 @@ const HistorySidebar = ({ children, onSelectHistory }: HistorySidebarProps) => {
                         }}
                       >
                         <Star
-                          className={`h-3 w-3 ${
-                            item.isFavorite ? 'text-yellow-400 fill-current' : ''
-                          }`}
+                          className={`h-3 w-3 ${item.isFavorite ? 'text-yellow-400 fill-current' : ''
+                            }`}
                         />
                       </Button>
                       <Button

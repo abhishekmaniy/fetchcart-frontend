@@ -23,7 +23,7 @@ const SearchInterface = ({
     'input' | 'searching' | 'form' | 'fetching'
   >('input')
   const [generatedForm, setGeneratedForm] = useState(null)
-  const { user } = useUserStore()
+  const { user, addSearchWithProducts } = useUserStore()
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -76,23 +76,23 @@ const SearchInterface = ({
       const resultData = await response.json()
 
       if (!response.ok) {
+        setIsSearching(false)
         throw new Error(
           resultData.error || `Request failed: ${response.status}`
         )
       }
 
-      const { addSearchWithProducts } = useUserStore.getState()
-      if (resultData.search && resultData.products) {
-        addSearchWithProducts(resultData.search, resultData.products)
+      console.log(user)
+
+      if (resultData.search) {
+        addSearchWithProducts(resultData.search)
       }
 
-      if (resultData.search?.id) {
-        const newUrl = new URL(window.location.href)
-        newUrl.searchParams.set('searchId', resultData.search.id)
-        window.history.pushState({}, '', newUrl.toString())
-      }
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('searchId', resultData.search.id)
+      window.history.pushState({}, '', newUrl.toString())
 
-      onSearchComplete(resultData)
+      onSearchComplete(resultData.search)
     } catch (error) {
       console.error('Search error:', error)
       onSearchComplete({ error: 'Something went wrong. Please try again.' })
@@ -234,7 +234,7 @@ const SearchInterface = ({
       </div>
 
       {/* Features */}
-      <div className='grid md:grid-cols-3 gap-6 max-w-4xl w-full mt-12'>
+      {/* <div className='grid md:grid-cols-3 gap-6 max-w-4xl w-full mt-12'>
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -280,7 +280,7 @@ const SearchInterface = ({
             Get curated recommendations with best prices
           </p>
         </motion.div>
-      </div>
+      </div> */}
     </section>
   )
 }

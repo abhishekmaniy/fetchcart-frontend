@@ -44,7 +44,7 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
 
   return (
     <>
-      <section className='relative py-12'>
+      <section className='relative pt-0 pb-12'>
         {/* Animated Colorful Background */}
         <div className='absolute inset-0 -z-10 pointer-events-none'>
           <motion.div
@@ -186,38 +186,31 @@ const SearchResults = ({ results, onNewSearch }: SearchResultsProps) => {
                       <Button size='icon' variant='ghost'>
                         <Heart className='h-4 w-4' />
                       </Button>
-                      <Button
-                        size='icon'
-                        variant='ghost'
-                        onClick={() => handleCompare(product)}
-                      >
-                        <GitCompare className='h-4 w-4' />
-                      </Button>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className='flex space-x-2 pt-2'>
+                  <div className='flex gap-2 pt-2'>
                     <Button
-                      className='flex-1 ...'
+                      className='flex-1 flex items-center justify-center space-x-2'
                       onClick={e => {
-                        e.stopPropagation() // prevent card click
+                        e.stopPropagation()
                         handleBuyNow(product)
                       }}
                     >
-                      <ShoppingCart className='h-4 w-4 mr-2 group-hover:animate-bounce' />
-                      Buy Now
+                      <ShoppingCart className='h-4 w-4 group-hover:animate-bounce' />
+                      <span>Buy Now</span>
                     </Button>
                     <Button
-                      size='icon'
-                      variant='ghost'
+                      className='flex items-center justify-center space-x-2'
+                      variant='outline'
                       onClick={e => {
                         e.stopPropagation()
                         handleCompare(product)
                       }}
                     >
-                      <GitCompare className='h-4 w-4 mr-2' />
-                      Compare
+                      <GitCompare className='h-4 w-4' />
+                      <span>Compare</span>
                     </Button>
                   </div>
                 </div>

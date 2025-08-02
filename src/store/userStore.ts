@@ -15,7 +15,7 @@ interface UserState {
 
   setIsAuthenticated: (auth: boolean) => void
 
-  addSearchWithProducts: (search: Search, products: Product[]) => void
+  addSearchWithProducts: (search: Search) => void
   logout: () => void
 }
 
@@ -26,7 +26,7 @@ export const useUserStore = create<UserState>()(
       token: null,
       isAuthenticated: false,
 
-      setUser: (user) => set({ user }),
+      setUser: (user) => set({ user: { ...user, searches: user.searches || [] } }),
 
       clearUser: () => set({ user: null }),
 
@@ -35,14 +35,15 @@ export const useUserStore = create<UserState>()(
 
       setIsAuthenticated: (auth) => set({ isAuthenticated: auth }),
 
-      addSearchWithProducts: (search, products) => {
+      addSearchWithProducts: (newSearch) => {
         const currentUser = get().user
         if (!currentUser) return
 
-        const updatedSearch = { ...search, products }
-        const updatedSearches = [...(currentUser.searches || []), updatedSearch]
+        const updatedUser = {
+          ...currentUser,
+          searches: [...(currentUser.searches || []), newSearch],
+        }
 
-        const updatedUser = { ...currentUser, searches: updatedSearches }
         set({ user: updatedUser })
       },
 

@@ -9,15 +9,16 @@ import SmartRecommendations from '../features/SmartRecommendations'
 import { useUserStore } from '@/store/userStore'
 import { Search, Alert, ComparedProduct } from '@/types'
 
-export type Tab = 'search' | 'assistant' | 'trends'
+export type Tab = 'search' | 'trends' | 'compare' | 'deals' | 'recommendations'
 
 interface MainContentProps {
+  selectedSearch: string | null
+  setSelectedSearch: (item: string) => void
   activeTab: Tab
   searchResults: Search[] | null
   setSearchResults: (results: Search[] | null) => void
   isSearching: boolean
   setIsSearching: (val: boolean) => void
-  activeFeature: string | null
   compareProducts: string[]
   setCompareProducts: (val: string[]) => void
   removeCompareProduct: (index: number) => void
@@ -36,10 +37,11 @@ interface MainContentProps {
 }
 
 const MainContent: React.FC<MainContentProps> = ({
+  selectedSearch,
+  setSelectedSearch,
   activeTab,
   searchResults,
   setSearchResults,
-  activeFeature,
   isSearching,
   setIsSearching,
   compareProducts,
@@ -59,21 +61,24 @@ const MainContent: React.FC<MainContentProps> = ({
   history
 }) => {
   const { user } = useUserStore()
-  const [searchParams] = useSearchParams()
-  const searchId = searchParams.get('searchId')
+  console.log(user)
+  console.log(user?.searches?.find(s => s.id === selectedSearch))
 
   const searchFromStore = useMemo(() => {
-    return user?.searches?.find(s => s.id === searchId)
-  }, [searchId, user?.searches])
+    return user?.searches?.find(s => s.id === selectedSearch)
+  }, [selectedSearch, user])
+
+  console.log(user)
+  console.log(selectedSearch)
 
   return (
-    <main className='flex-1 px-6 py-8'>
+    <main className="px-6 py-8">
       <div className='space-y-8'>
         {activeTab === 'search' && (
           <>
             {searchFromStore ? (
               <SearchResults
-                key={searchId}
+                key={selectedSearch}
                 results={searchFromStore}
                 onNewSearch={() => {
                   const newUrl = new URL(window.location.href)
@@ -81,11 +86,20 @@ const MainContent: React.FC<MainContentProps> = ({
                   window.history.replaceState({}, '', newUrl.toString())
                   // Optional: trigger reactivity
                   window.dispatchEvent(new PopStateEvent('popstate'))
+                  setSelectedSearch(null)
+                  setSearchResults(null)
+
                 }}
               />
             ) : (
               <SearchInterface
-                onSearchComplete={setSearchResults}
+                onSearchComplete={newSearch => {
+                  console.log("Reach in the onsearchComplete")
+                  console.log(newSearch)
+                  setSearchResults([newSearch])
+                  setSelectedSearch(newSearch.id)
+                  setIsSearching(false)
+                }}
                 isSearching={isSearching}
                 setIsSearching={setIsSearching}
               />
@@ -93,27 +107,26 @@ const MainContent: React.FC<MainContentProps> = ({
           </>
         )}
 
-        {activeTab === 'assistant' && (
-          <>
-            {activeFeature === 'compare' && <QuickCompare />}
-            {activeFeature === 'deals' && (
-              <DealAlerts
-                currentDeals={[]}
-                newAlert={newAlert}
-                setNewAlert={setNewAlert}
-                isCreatingAlert={isCreatingAlert}
-                createAlert={createAlert}
-                alerts={alerts}
-              />
-            )}
-            {activeFeature === 'recommendations' && <SmartRecommendations />}
-            {!activeFeature && (
-              <div className='text-muted'>
-                Select a feature from the sidebar.
-              </div>
-            )}
-          </>
-        )}
+        <>
+          {activeTab === 'compare' && <QuickCompare />}
+          {activeTab === 'deals' && (
+            <DealAlerts
+              currentDeals={[]}
+              newAlert={newAlert}
+              setNewAlert={setNewAlert}
+              isCreatingAlert={isCreatingAlert}
+              createAlert={createAlert}
+              alerts={alerts}
+            />
+          )}
+          {activeTab === 'recommendations' && <SmartRecommendations />}
+          {!activeTab && (
+            <div className='text-muted'>
+              Select a feature from the sidebar.
+            </div>
+          )}
+        </>
+
 
         {activeTab === 'trends' && <TrendsAnalytics />}
       </div>
