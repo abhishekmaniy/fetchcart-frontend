@@ -12,6 +12,7 @@ import { Search, Alert, ComparedProduct } from '@/types'
 export type Tab = 'search' | 'trends' | 'compare' | 'deals' | 'recommendations'
 
 interface MainContentProps {
+  selectedCompare: string
   selectedSearch: string | null
   setSelectedSearch: (item: string) => void
   activeTab: Tab
@@ -34,9 +35,11 @@ interface MainContentProps {
   setAuthResult: (val: any) => void
   setBudget: (val: number[]) => void
   history: string[]
+  setSelectedCompare: (item: string) => void
 }
 
 const MainContent: React.FC<MainContentProps> = ({
+  selectedCompare,
   selectedSearch,
   setSelectedSearch,
   activeTab,
@@ -58,7 +61,8 @@ const MainContent: React.FC<MainContentProps> = ({
   authResult,
   setAuthResult,
   setBudget,
-  history
+  history,
+  setSelectedCompare
 }) => {
   const { user } = useUserStore()
   console.log(user)
@@ -69,7 +73,7 @@ const MainContent: React.FC<MainContentProps> = ({
   }, [selectedSearch, user])
 
   console.log(user)
-  console.log(selectedSearch)
+  console.log(selectedCompare)
 
   return (
     <main className="px-6 py-8">
@@ -108,7 +112,7 @@ const MainContent: React.FC<MainContentProps> = ({
         )}
 
         <>
-          {activeTab === 'compare' && <QuickCompare />}
+          {activeTab === 'compare' && <QuickCompare selectedCompare={selectedCompare} setSelectedCompare={setSelectedCompare} />}
           {activeTab === 'deals' && (
             <DealAlerts
               currentDeals={[]}

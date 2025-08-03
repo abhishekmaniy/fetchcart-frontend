@@ -24,6 +24,7 @@ const Dashboard = () => {
   )
 
   const [selectedSearch, setSelectedSearch] = useState<string | null>(null)
+  const [selectedCompare, setSelectedCompare] = useState<string | null>(null)
   console.log("searchResults", searchResults)
   console.log("selectedSearch", selectedSearch)
 
@@ -32,7 +33,7 @@ const Dashboard = () => {
 
 
       <div className="h-16 flex-shrink-0">
-        <Header setSelectedSearch={setSelectedSearch} />
+        <Header setActiveTab={setActiveTab} setSelectedCompare={setSelectedCompare} setSelectedSearch={setSelectedSearch} />
       </div>
 
       {/* Main Layout: Sidebar + Content */}
@@ -46,6 +47,8 @@ const Dashboard = () => {
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto">
             <MainContent
+            selectedCompare={selectedCompare}
+              setSelectedCompare={setSelectedCompare}
               selectedSearch={selectedSearch}
               setSelectedSearch={setSelectedSearch}
               alerts={[]}

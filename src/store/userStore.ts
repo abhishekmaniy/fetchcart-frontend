@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { User, Token, Search, Product } from '../types'
+import { User, Token, Search, Product, Compare } from '../types'
 
 interface UserState {
   user: User | null
@@ -16,6 +16,9 @@ interface UserState {
   setIsAuthenticated: (auth: boolean) => void
 
   addSearchWithProducts: (search: Search) => void
+  addCompareWithProducts: (compare: Compare) => void
+
+
   logout: () => void
 }
 
@@ -42,6 +45,18 @@ export const useUserStore = create<UserState>()(
         const updatedUser = {
           ...currentUser,
           searches: [...(currentUser.searches || []), newSearch],
+        }
+
+        set({ user: updatedUser })
+      },
+
+      addCompareWithProducts: (newCompare) => {
+        const currentUser = get().user
+        if (!currentUser) return
+
+        const updatedUser = {
+          ...currentUser,
+          comparisons: [...(currentUser.comparisons || []), newCompare],
         }
 
         set({ user: updatedUser })

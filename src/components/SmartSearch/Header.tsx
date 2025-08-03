@@ -13,7 +13,10 @@ import { useUserStore } from '@/store/userStore'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const Header = ({ setSelectedSearch }: { setSelectedSearch: (item:string) => void }) => {
+
+type TabType = 'search' | 'trends' | 'compare' | 'deals' | 'recommendations'
+
+const Header = ({ setActiveTab, setSelectedSearch, setSelectedCompare }: { setActiveTab: React.Dispatch<React.SetStateAction<TabType>>, setSelectedSearch: (item: string) => void, setSelectedCompare: (item: string) => void }) => {
   const { isAuthenticated, logout } = useUserStore()
   const navigate = useNavigate()
 
@@ -51,7 +54,7 @@ const Header = ({ setSelectedSearch }: { setSelectedSearch: (item:string) => voi
           </div>
 
           <div className='flex items-center space-x-4'>
-            <HistorySidebar setSelectedSearch={setSelectedSearch} >
+            <HistorySidebar setActiveTab={setActiveTab} setSelectedCompare={setSelectedCompare} setSelectedSearch={setSelectedSearch} >
               <Button
                 variant='outline'
                 size='sm'

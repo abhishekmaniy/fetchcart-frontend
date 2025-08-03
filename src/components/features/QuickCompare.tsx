@@ -17,8 +17,9 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Product } from '@/types'
+import { useUserStore } from '@/store/userStore'
 
-function isValidURL (input: string): boolean {
+function isValidURL(input: string): boolean {
   try {
     const url = new URL(input)
     return ['http:', 'https:'].includes(url.protocol)
@@ -27,10 +28,10 @@ function isValidURL (input: string): boolean {
   }
 }
 
-const QuickCompare = () => {
+const QuickCompare = ({ selectedCompare, setSelectedCompare }: { setSelectedCompare: (item: string) => void, selectedCompare: string }) => {
   const [searchQueries, setSearchQueries] = useState(['', ''])
-  const [products, setProducts] = useState<Product[]>([])
   const [isComparing, setIsComparing] = useState(false)
+  const [comparisonId, setComparisonId] = useState<string | null>(null)
   const [searchHistory] = useState([
     'Sony WH-1000XM4 Wireless Headphones',
     'Apple AirPods Pro (2nd Gen)',
@@ -39,6 +40,11 @@ const QuickCompare = () => {
     'Samsung Galaxy S24 Ultra'
   ])
   const { toast } = useToast()
+  const { addCompareWithProducts, user } = useUserStore()
+  const comparisonData = user?.comparisons?.find(c => c.id === selectedCompare)
+  const products = comparisonData?.products || []
+
+  console.log(products.length)
 
   const handleCompare = async () => {
     const trimmedQueries = searchQueries.map(q => q.trim())
@@ -57,9 +63,8 @@ const QuickCompare = () => {
       if (q.startsWith('http') && !isValidURL(q)) {
         toast({
           title: 'Invalid URL',
-          description: `Product ${
-            i + 1
-          } contains an invalid URL. Please correct it.`,
+          description: `Product ${i + 1
+            } contains an invalid URL. Please correct it.`,
           variant: 'destructive'
         })
         return
@@ -73,15 +78,17 @@ const QuickCompare = () => {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/compare/product`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ queries: trimmedQueries })
+        body: JSON.stringify({ queries: trimmedQueries, userId: user.id })
       })
 
       if (!response.ok) {
         throw new Error('Failed to fetch product data')
       }
 
-      const data: Product[] = await response.json()
-      setProducts(data)
+      const data = await response.json()
+      setComparisonId(data.compare.id)
+      addCompareWithProducts(data.compare)
+
       toast({
         title: 'Comparison Ready!',
         description: 'Products have been analyzed and compared.'
@@ -135,98 +142,100 @@ const QuickCompare = () => {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className='flex items-center space-x-2'>
-            <Search className='h-5 w-5' />
-            <span>Products to Compare</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          {searchQueries.map((query, index) => (
-            <div key={index} className='space-y-2'>
-              <div className='flex items-center space-x-2'>
-                <div className='flex-1'>
-                  <Label htmlFor={`product-${index}`}>
-                    Product {index + 1}
-                  </Label>
-                  <Input
-                    id={`product-${index}`}
-                    placeholder='Enter product name or URL...'
-                    value={query}
-                    onChange={e => {
-                      const newQueries = [...searchQueries]
-                      newQueries[index] = e.target.value
-                      setSearchQueries(newQueries)
-                    }}
-                  />
+      {!selectedCompare && (
+        <Card>
+          <CardHeader>
+            <CardTitle className='flex items-center space-x-2'>
+              <Search className='h-5 w-5' />
+              <span>Products to Compare</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {searchQueries.map((query, index) => (
+              <div key={index} className='space-y-2'>
+                <div className='flex items-center space-x-2'>
+                  <div className='flex-1'>
+                    <Label htmlFor={`product-${index}`}>
+                      Product {index + 1}
+                    </Label>
+                    <Input
+                      id={`product-${index}`}
+                      placeholder='Enter product name or URL...'
+                      value={query}
+                      onChange={e => {
+                        const newQueries = [...searchQueries]
+                        newQueries[index] = e.target.value
+                        setSearchQueries(newQueries)
+                      }}
+                    />
+                  </div>
+                  {searchQueries.length > 2 && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => removeProduct(index)}
+                      className='mt-6'
+                    >
+                      <Minus className='h-4 w-4' />
+                    </Button>
+                  )}
                 </div>
-                {searchQueries.length > 2 && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => removeProduct(index)}
-                    className='mt-6'
-                  >
-                    <Minus className='h-4 w-4' />
-                  </Button>
-                )}
-              </div>
 
-              <div className='flex flex-wrap gap-1'>
-                <span className='text-xs text-muted-foreground mr-2'>
-                  Quick select:
-                </span>
-                {searchHistory.slice(0, 3).map((item, historyIndex) => (
-                  <Button
-                    key={historyIndex}
-                    variant='ghost'
-                    size='sm'
-                    className='h-6 px-2 text-xs'
-                    onClick={() => {
-                      const newQueries = [...searchQueries]
-                      newQueries[index] = item
-                      setSearchQueries(newQueries)
-                    }}
-                  >
-                    {item.length > 20 ? item.substring(0, 20) + '...' : item}
-                  </Button>
-                ))}
+                <div className='flex flex-wrap gap-1'>
+                  <span className='text-xs text-muted-foreground mr-2'>
+                    Quick select:
+                  </span>
+                  {searchHistory.slice(0, 3).map((item, historyIndex) => (
+                    <Button
+                      key={historyIndex}
+                      variant='ghost'
+                      size='sm'
+                      className='h-6 px-2 text-xs'
+                      onClick={() => {
+                        const newQueries = [...searchQueries]
+                        newQueries[index] = item
+                        setSearchQueries(newQueries)
+                      }}
+                    >
+                      {item.length > 20 ? item.substring(0, 20) + '...' : item}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          <div className='flex space-x-2'>
-            {searchQueries.length < 4 && (
-              <Button variant='outline' onClick={addProduct}>
-                <Plus className='h-4 w-4 mr-2' />
-                Add Product
-              </Button>
-            )}
-            <Button
-              onClick={handleCompare}
-              disabled={isComparing}
-              className='flex-1'
-            >
-              {isComparing ? (
-                <>
-                  <Zap className='h-4 w-4 mr-2 animate-spin' />
-                  Comparing products...
-                </>
-              ) : (
-                <>
-                  <Zap className='h-4 w-4 mr-2' />
-                  Compare Products
-                </>
+            <div className='flex space-x-2'>
+              {searchQueries.length < 4 && (
+                <Button variant='outline' onClick={addProduct}>
+                  <Plus className='h-4 w-4 mr-2' />
+                  Add Product
+                </Button>
               )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <Button
+                onClick={handleCompare}
+                disabled={isComparing}
+                className='flex-1'
+              >
+                {isComparing ? (
+                  <>
+                    <Zap className='h-4 w-4 mr-2 animate-spin' />
+                    Comparing products...
+                  </>
+                ) : (
+                  <>
+                    <Zap className='h-4 w-4 mr-2' />
+                    Compare Products
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {products.length > 0 && (
+      {products.length > 0 && selectedCompare && (
         <div className='space-y-6'>
-          <h3 className='text-xl font-semibold text-center'>
+          <h3 className='text-xl font-semibold text-left'>
             Comparison Results
           </h3>
 
@@ -309,10 +318,10 @@ const QuickCompare = () => {
 
                     <Separator />
 
-                    {/* <div>
+                    <div>
                       <h5 className='font-medium mb-2'>Key Features</h5>
                       <div className='flex flex-wrap gap-1'>
-                        {product.features?.map((feature, idx) => (
+                        {product.featureBullets?.map((feature, idx) => (
                           <Badge
                             key={idx}
                             variant='secondary'
@@ -322,9 +331,9 @@ const QuickCompare = () => {
                           </Badge>
                         ))}
                       </div>
-                    </div> */}
+                    </div>
 
-                    {/* <div>
+                    <div>
                       <h5 className='font-medium mb-2 text-green-600'>Pros</h5>
                       <ul className='space-y-1'>
                         {product.pros?.map((pro, idx) => (
@@ -337,9 +346,9 @@ const QuickCompare = () => {
                           </li>
                         ))}
                       </ul>
-                    </div> */}
+                    </div>
 
-                    {/* <div>
+                    <div>
                       <h5 className='font-medium mb-2 text-red-600'>Cons</h5>
                       <ul className='space-y-1'>
                         {product.cons?.map((con, idx) => (
@@ -352,9 +361,9 @@ const QuickCompare = () => {
                           </li>
                         ))}
                       </ul>
-                    </div> */}
+                    </div>
 
-                    <Button className='w-full'>
+                    <Button onClick={() => { }} className='w-full'>
                       View Product
                       <ArrowRight className='h-4 w-4 ml-2' />
                     </Button>

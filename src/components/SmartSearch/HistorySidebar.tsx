@@ -21,12 +21,17 @@ interface HistoryItem {
   isFavorite: boolean
 }
 
+type TabType = 'search' | 'trends' | 'compare' | 'deals' | 'recommendations'
 interface HistorySidebarProps {
   children: React.ReactNode
   setSelectedSearch?: (item: string) => void
+  setSelectedCompare?: (item: string) => void
+  setActiveTab: React.Dispatch<React.SetStateAction<TabType>>
 }
 
-const HistorySidebar = ({ children, setSelectedSearch }: HistorySidebarProps) => {
+
+
+const HistorySidebar = ({ children, setSelectedSearch, setSelectedCompare, setActiveTab }: HistorySidebarProps) => {
   const { user } = useUserStore()
   const [filter, setFilter] = useState<'all' | 'favorites' | 'recent'>('all')
   const [open, setOpen] = useState(false)
@@ -39,6 +44,18 @@ const HistorySidebar = ({ children, setSelectedSearch }: HistorySidebarProps) =>
       timestamp: new Date(search.createdAt || Date.now()),
       resultsCount: search.products?.length || 0,
       isFavorite: search.isFavorite ?? false,
+      category: undefined
+    }))
+  }, [user])
+
+  const parsedComparisons: HistoryItem[] = useMemo(() => {
+    const comps = user?.comparisons ?? []
+    return comps.map(comp => ({
+      id: comp.id,
+      query: comp.title || 'Untitled Comparison',
+      timestamp: new Date(comp.createdAt || Date.now()),
+      resultsCount: comp.productUrl?.length || 0,
+      isFavorite: false, // You can update this if needed
       category: undefined
     }))
   }, [user])
@@ -72,17 +89,32 @@ const HistorySidebar = ({ children, setSelectedSearch }: HistorySidebarProps) =>
   }
 
   const handleHistoryItemClick = (item: HistoryItem) => {
-    // update URL with searchId
+
     const newUrl = new URL(window.location.href)
     newUrl.searchParams.set('searchId', item.id)
     window.history.pushState({}, '', newUrl.toString())
 
-    // trigger any callback
     setSelectedSearch(item.id)
+    setActiveTab("search")
 
-    // close sidebar
     setOpen(false)
   }
+
+  const handleComparisonClick = (item: HistoryItem) => {
+    const newUrl = new URL(window.location.href)
+
+    newUrl.search = ''
+
+    newUrl.searchParams.set('compareId', item.id)
+
+    window.history.pushState({}, '', newUrl.toString())
+
+    setSelectedCompare?.(item.id)
+    setSelectedSearch(null)
+    setActiveTab("compare")
+    setOpen(false)
+  }
+
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -190,6 +222,33 @@ const HistorySidebar = ({ children, setSelectedSearch }: HistorySidebarProps) =>
                   </div>
                 </div>
               ))
+            )}
+            {parsedComparisons.length > 0 && (
+              <>
+                <div className='px-4 pt-4 text-sm font-semibold text-muted-foreground'>Comparisons</div>
+                <div className='space-y-3 px-4 pt-2 pb-4'>
+                  {parsedComparisons.map(item => (
+                    <div
+                      key={item.id}
+                      className='group bg-card border rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/50'
+                      onClick={() => handleComparisonClick(item)}
+                    >
+                      <div className='flex items-start justify-between mb-2'>
+                        <div className='flex-1 min-w-0'>
+                          <h4 className='font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors'>
+                            {item.query}
+                          </h4>
+                          <div className='flex items-center space-x-2 text-xs text-muted-foreground'>
+                            <span>{getTimeAgo(item.timestamp)}</span>
+                            <span>•</span>
+                            <span>{item.resultsCount} products</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </ScrollArea>

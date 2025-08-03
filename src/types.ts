@@ -1,25 +1,56 @@
-// src/types/index.ts
-
 export interface Product {
   id: string
   searchId: string
+  compareId?: string | null
+
   productName?: string
+  brand?: string
+  model?: string
+
   price?: string
   originalPrice?: string
   savings?: string
+
   image?: string
+  images?: string[]
+
   rating?: number
   reviews?: number
+
+  productUrl?: string
   store?: string
+  asin?: string
+
+  category?: string
+  description?: string
+
+  productInfo?: Record<string, string>
+  featureBullets?: string[]
+
+  pros?: string[]
+  cons?: string[]
+
+  createdAt: Date
 }
 
 export interface Search {
   id: string
   userId: string
   query: string
+  isFavorite: boolean
   createdAt: Date
-  isFavorite?: boolean
   products: Product[]
+}
+
+export interface Compare {
+  id: string
+  userId: string
+  title: string
+  productUrl?: string
+  summary: string
+  insights?: Record<string, any>
+  createdAt: Date
+  products: Product[] 
 }
 
 export interface User {
@@ -31,7 +62,9 @@ export interface User {
   verified: boolean
   createdAt: Date
   updatedAt: Date
+
   searches?: Search[]
+  comparisons?: Compare[]
 }
 
 export interface Token {
