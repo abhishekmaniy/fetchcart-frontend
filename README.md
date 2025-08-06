@@ -1,73 +1,60 @@
-# Welcome to your Lovable project
+# 🛍️ FetchCart – AI-Powered Smart Shopping Assistant
 
-## Project info
+FetchCart is an AI-driven web application that simplifies online shopping. Just enter a product-related prompt and get real-time curated product listings scraped from the internet, complete with descriptions, links, and comparisons — all powered by AI.
 
-**URL**: https://lovable.dev/projects/6b160b38-017b-4795-bbdd-d478a8a26be8
+## 🚀 Features
 
-## How can I edit this code?
+- 🔍 **Smart Product Search**: Search products using natural language prompts and get live results.
+- 🔗 **Direct Product Links**: Navigate directly to the product’s source for quick purchase.
+- ⚖️ **Smart Product Comparison**: Enter product URLs to receive detailed comparisons including pros, cons, and key suggestions.
+- 💬 **User Chat**: Connect and chat with other users during skill swaps or comparisons.
+- 👥 **Community Section**: Discover shared searches, comparisons, and learn from others.
+- 📈 **Trending Products**: Explore what's popular in the market via the trends section.
 
-There are several ways of editing your application.
+## 🧠 Powered By
 
-**Use Lovable**
+- **Gemini API** – For natural language understanding and AI-generated comparisons.
+- **ScraperAPI / ScrapAPI** – To fetch live product data from external sources.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6b160b38-017b-4795-bbdd-d478a8a26be8) and start prompting.
+## 🛠️ Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**: Next.js + Tailwind CSS
+- **Backend**: Node.js + Express.js
+- **Real-time**: WebSockets
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT / Sessions (if applicable)
+- **UI**: Aceternity UI components
 
-**Use your preferred IDE**
+## 🧪 Installation & Run Locally
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Clone the repository
+git clone https://github.com/your-username/fetchcart.git
+cd fetchcart
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install dependencies
+npm install
 
-Follow these steps:
+# Set up environment variables
+cp .env.example .env
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
+
 ```
 
-**Edit a file directly in GitHub**
+## 📁 Folder Structure (Basic)
+```bash
+/client       - Frontend code (Next.js)
+/server       - Backend APIs (Express)
+/prisma       - Prisma schema and DB setup
+/public       - Static files
+.env          - Environment variables
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
+## 🙌 Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/6b160b38-017b-4795-bbdd-d478a8a26be8) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🌐 Live Demo
+https://fetchcart-ai-find.vercel.app/

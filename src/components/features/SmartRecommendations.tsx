@@ -17,7 +17,8 @@ import {
   Sparkles,
   ShoppingCart,
   Heart,
-  TrendingUp
+  TrendingUp,
+  EyeOff
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -28,8 +29,11 @@ const SmartRecommendations = () => {
     brand: '',
     priority: ''
   })
+
   const [recommendations, setRecommendations] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [previewMode, setPreviewMode] = useState(false)
+
   const { toast } = useToast()
 
   const mockRecommendations = [
@@ -73,15 +77,31 @@ const SmartRecommendations = () => {
 
   const handleGetRecommendations = async () => {
     setIsLoading(true)
-    // Simulate AI processing
     await new Promise(resolve => setTimeout(resolve, 2000))
     setRecommendations(mockRecommendations)
     setIsLoading(false)
+
     toast({
       title: 'Recommendations Ready!',
       description:
         'AI has found the best products for you based on your preferences.'
     })
+  }
+
+  if (!previewMode) {
+    return (
+      <div className='text-center space-y-6 mt-12'>
+        <EyeOff className='mx-auto h-12 w-12 text-muted-foreground' />
+        <h2 className='text-2xl font-bold'>Smart Recommendations</h2>
+        <p className='text-muted-foreground max-w-md mx-auto'>
+          Our AI is still cooking up personalized product picks tailored just
+          for you. Stay tuned!
+        </p>
+        <Button onClick={() => setPreviewMode(true)} className='mt-4'>
+          Show Preview
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -97,7 +117,6 @@ const SmartRecommendations = () => {
         </p>
       </div>
 
-      {/* Preferences Form */}
       <Card>
         <CardHeader>
           <CardTitle className='flex items-center space-x-2'>
@@ -202,7 +221,6 @@ const SmartRecommendations = () => {
         </CardContent>
       </Card>
 
-      {/* Recommendations Results */}
       {recommendations.length > 0 && (
         <div className='space-y-4'>
           <h3 className='text-xl font-semibold flex items-center space-x-2'>
