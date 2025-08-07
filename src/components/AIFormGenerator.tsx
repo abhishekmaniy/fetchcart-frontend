@@ -152,7 +152,7 @@ const AIFormGenerator = ({
                     step={field.step ?? 1}
                   />
                   <div className='text-sm text-muted-foreground'>
-                    Selected: ${value}
+                    Selected: ₹{value}
                   </div>
                 </div>
               )

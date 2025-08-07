@@ -307,11 +307,11 @@ const QuickCompare = ({ selectedCompare, setSelectedCompare }: { setSelectedComp
 
                     <div className='flex items-center space-x-2'>
                       <span className='text-2xl font-bold text-primary'>
-                        ${product.price}
+                        {product.price}
                       </span>
                       {product.originalPrice && (
                         <span className='text-lg text-muted-foreground line-through'>
-                          ${product.originalPrice}
+                          {product.originalPrice}
                         </span>
                       )}
                     </div>

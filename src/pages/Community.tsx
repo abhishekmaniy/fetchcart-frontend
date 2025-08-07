@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Heart, MessageCircle, Share2, Plus, Filter, Search, Calendar, TrendingUp, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/Header";
 
 interface Post {
   id: string;
@@ -127,7 +128,7 @@ const Community = () => {
     setPosts([post, ...posts]);
     setNewPost({ title: "", content: "", category: "", image: "" });
     setIsCreateModalOpen(false);
-    
+
     toast({
       title: "Post Created!",
       description: "Your experience has been shared with the community."
@@ -135,8 +136,8 @@ const Community = () => {
   };
 
   const handleLike = (postId: string) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
+    setPosts(posts.map(post =>
+      post.id === postId
         ? { ...post, likes: post.likes + 1 }
         : post
     ));
@@ -146,7 +147,7 @@ const Community = () => {
     .filter(post => {
       const matchesCategory = filter === "all" || post.category.toLowerCase().includes(filter.toLowerCase());
       const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           post.content.toLowerCase().includes(searchQuery.toLowerCase());
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     })
     .sort((a, b) => {
@@ -157,6 +158,7 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+      <Header />
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="text-center space-y-4 mb-8">
@@ -177,7 +179,7 @@ const Community = () => {
               className="pl-10"
             />
           </div>
-          
+
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-full md:w-48">
               <SelectValue placeholder="Filter by category" />
@@ -220,13 +222,13 @@ const Community = () => {
                     id="title"
                     placeholder="What's your experience about?"
                     value={newPost.title}
-                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="category">Category</Label>
-                  <Select value={newPost.category} onValueChange={(value) => setNewPost({...newPost, category: value})}>
+                  <Select value={newPost.category} onValueChange={(value) => setNewPost({ ...newPost, category: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -246,7 +248,7 @@ const Community = () => {
                     id="content"
                     placeholder="Share your detailed experience, tips, and recommendations..."
                     value={newPost.content}
-                    onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
                     rows={6}
                   />
                 </div>
@@ -258,7 +260,7 @@ const Community = () => {
                       id="image"
                       placeholder="Paste image URL or upload..."
                       value={newPost.image}
-                      onChange={(e) => setNewPost({...newPost, image: e.target.value})}
+                      onChange={(e) => setNewPost({ ...newPost, image: e.target.value })}
                     />
                     <Button variant="outline" size="sm">
                       <Camera className="h-4 w-4" />
@@ -287,14 +289,14 @@ const Community = () => {
                 <div className="flex flex-col md:flex-row">
                   {post.image && (
                     <div className="md:w-80 h-48 md:h-auto">
-                      <img 
-                        src={post.image} 
+                      <img
+                        src={post.image}
                         alt={post.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   )}
-                  
+
                   <div className="flex-1 p-6">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center space-x-3">
@@ -315,7 +317,7 @@ const Community = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Badge variant="outline">{post.category}</Badge>
                         {post.trending && (
@@ -341,18 +343,18 @@ const Community = () => {
                           <Heart className="h-4 w-4" />
                           <span>{post.likes}</span>
                         </Button>
-                        
+
                         <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                           <MessageCircle className="h-4 w-4" />
                           <span>{post.comments}</span>
                         </Button>
-                        
+
                         <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                           <Share2 className="h-4 w-4" />
                           <span>{post.shares}</span>
                         </Button>
                       </div>
-                      
+
                       <Button variant="outline" size="sm">
                         Read More
                       </Button>
@@ -371,7 +373,7 @@ const Community = () => {
                 <div className="text-6xl">📝</div>
                 <h3 className="text-xl font-semibold">No posts found</h3>
                 <p className="text-muted-foreground">
-                  {searchQuery || filter !== "all" 
+                  {searchQuery || filter !== "all"
                     ? "Try adjusting your filters or search terms"
                     : "Be the first to share your shopping experience!"
                   }

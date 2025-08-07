@@ -196,7 +196,7 @@ const SearchInterface = ({
       <div className='w-full max-w-2xl space-y-4'>
         <div className='relative'>
           <Textarea
-            placeholder='e.g., I need wireless headphones under $200 with good noise cancellation for working from home...'
+            placeholder='e.g., I need wireless headphones under ₹200 with good noise cancellation for working from home...'
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className='min-h-[120px] text-lg resize-none pr-12'
@@ -215,7 +215,7 @@ const SearchInterface = ({
           {[
             'Best laptop for college students',
             'Eco-friendly cleaning products',
-            'Gaming setup under $1000',
+            'Gaming setup under ₹1000',
             'Professional camera for beginners',
             'Affordable smartwatches',
             'Noise-cancelling earbuds'
