@@ -47,7 +47,7 @@ const Dashboard = () => {
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto">
             <MainContent
-            selectedCompare={selectedCompare}
+              selectedCompare={selectedCompare}
               setSelectedCompare={setSelectedCompare}
               selectedSearch={selectedSearch}
               setSelectedSearch={setSelectedSearch}

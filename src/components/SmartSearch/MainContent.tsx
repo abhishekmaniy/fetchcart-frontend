@@ -92,7 +92,6 @@ const MainContent: React.FC<MainContentProps> = ({
                   window.dispatchEvent(new PopStateEvent('popstate'))
                   setSelectedSearch(null)
                   setSearchResults(null)
-
                 }}
               />
             ) : (
