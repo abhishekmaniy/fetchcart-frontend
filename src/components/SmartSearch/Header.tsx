@@ -8,10 +8,8 @@ import {
   LogOut,
   Moon,
   Search,
-  Sparkles,
   Sun,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -78,7 +76,6 @@ const Header = ({
         THEME_STORAGE_KEY,
       ) as Theme | null;
 
-      // Only follow system theme if user has not manually selected light/dark
       if (currentSavedTheme !== "dark" && currentSavedTheme !== "light") {
         const systemTheme = getSystemTheme();
 
@@ -179,9 +176,12 @@ function LandingHeader({
           onClick={() => navigate("/")}
           className="flex min-w-0 items-center gap-2 font-semibold tracking-tight"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary-gradient shadow-glow">
-            <Sparkles className="h-4 w-4 text-white" />
-          </span>
+          <img
+            src="/logo.png"
+            alt="FetchCart AI logo"
+            className="h-8 w-8 shrink-0"
+            draggable={false}
+          />
 
           <span className="truncate text-[14px] sm:text-[15px]">
             FetchCart <span className="text-gradient">AI</span>
@@ -239,20 +239,10 @@ function LandingHeader({
               <button
                 type="button"
                 onClick={() => navigate("/auth")}
-                // className="hidden px-3 py-1.5 text-sm text-muted-foreground transition hover:text-foreground sm:inline-flex"
                 className="rounded-xl bg-primary-gradient px-3 py-2 text-xs font-medium text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:px-4 sm:text-sm"
               >
                 Sign in
               </button>
-
-              {/* <button
-                type="button"
-                onClick={() => navigate("/search")}
-                className="rounded-xl bg-primary-gradient px-3 py-2 text-xs font-medium text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:px-4 sm:text-sm"
-              >
-                <span className="sm:hidden">Start</span>
-                <span className="hidden sm:inline">Get started</span>
-              </button> */}
             </>
           )}
         </div>
@@ -288,9 +278,12 @@ function DashboardHeader({
                 onClick={() => navigate("/search")}
                 className="flex min-w-0 items-center gap-2 font-semibold tracking-tight"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-gradient shadow-glow sm:h-10 sm:w-10 lg:h-9 lg:w-9">
-                  <Sparkles className="h-4 w-4 text-white" />
-                </span>
+                <img
+                  src="/Logo.svg"
+                  alt="FetchCart AI logo"
+                  className="h-9 w-9 shrink-0 sm:h-10 sm:w-10 lg:h-9 lg:w-9"
+                  draggable={false}
+                />
 
                 <span className="truncate text-lg font-semibold tracking-tight sm:text-xl">
                   FetchCart <span className="text-gradient">AI</span>
@@ -367,16 +360,6 @@ function DashboardHeader({
                   <span>History</span>
                 </Button>
               </HistorySidebar>
-
-              {/* <Button
-                variant="ghost"
-                size="sm"
-                className="h-10 gap-2 rounded-xl text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-                onClick={() => navigate("/community")}
-              >
-                <Users className="h-4 w-4" />
-                <span>Community</span>
-              </Button> */}
 
               <Button
                 type="button"
