@@ -1,115 +1,128 @@
-import { Toaster } from '@/components/ui/toaster'
-import { Toaster as Sonner } from '@/components/ui/sonner'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Index from './pages/Index'
-import Dashboard from './pages/Dashboard'
-import NotFound from './pages/NotFound'
-import Checkout from './pages/Checkout'
-import Community from './pages/Community'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import SignInPage from './components/SigninPage/SignInPage'
-import SignUpPage from './components/SigninPage/SignUpPage'
-import VerifyPage from './components/VerifyPage/VerifyPage'
-import ProtectedRoute from './components/ProtectedRoute'
-import PublicRoute from './components/PublicRoute'
-import AuthProvider from './components/AuthProvider'
-import Search from './pages/Search'
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-const queryClient = new QueryClient()
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
-const App = () => (
-  <AuthProvider>
+import AuthPage from "./pages/AuthPage";
+import Checkout from "./pages/Checkout";
+import CheckoutPage from "./pages/CheckoutPage";
+import Community from "./pages/Community";
+import Compare from "./pages/Compare";
+import Dashboard from "./pages/Dashboard";
+import Index from "./pages/LandingPage/Index";
+import NotFound from "./pages/NotFound";
+import Search from "./pages/Search";
+import CompareCreatePage from "./pages/CompareCreate";
+
+const queryClient = new QueryClient();
+
+const App = () => {
+  return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
+          <Sonner
+            position="top-right"
+            theme="dark"
+            richColors
+            closeButton
+            toastOptions={{
+              classNames: {
+                toast:
+                  "!bg-zinc-950 !border !border-zinc-800 !text-zinc-100 !shadow-2xl",
+                title: "!text-white !font-medium",
+                description: "!text-zinc-400",
+                success:
+                  "!bg-emerald-500/10 !border-emerald-500/20 !text-emerald-300",
+                error: "!bg-red-500/10 !border-red-500/20 !text-red-300",
+              },
+            }}
+          />
+
           <BrowserRouter>
             <Routes>
-              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+
               <Route
-                path='/'
+                path="/auth"
                 element={
                   <PublicRoute>
-                    <Index />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path='/signin'
-                element={
-                  <PublicRoute>
-                    <SignInPage />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path='/signup'
-                element={
-                  <PublicRoute>
-                    <SignUpPage />
+                    <AuthPage />
                   </PublicRoute>
                 }
               />
 
-              {/* Open Verification Route */}
-              <Route
-                path='/user/:userId/verify/:token'
-                element={<VerifyPage />}
-              />
+              {/* <Route path="/checkout" element={<CheckoutPage />} /> */}
 
-              {/* Protected Routes */}
+              {/* search form page */}
               <Route
-                path='/dashboard'
+                path="/search"
                 element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
                 }
               />
-              {/* <Route
-                path='/'
-                element={
-                  <ProtectedRoute>
-                    <SmartSearch />
-                  </ProtectedRoute>
-                }
-              /> */}
 
+              {/* search results page */}
               <Route
-                path='/checkout'
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/community'
-                element={
-                  <ProtectedRoute>
-                    <Community />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path='/search/:searchId'
+                path="/search/:searchId"
                 element={
                   <ProtectedRoute>
                     <Search />
                   </ProtectedRoute>
                 }
               />
-              {/* 404 */}
-              <Route path='*' element={<NotFound />} />
+
+              {/* comparison creation page */}
+              <Route
+                path="/compare"
+                element={
+                  <ProtectedRoute>
+                    <CompareCreatePage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* comparison result page */}
+              <Route
+                path="/compare/:compareId"
+                element={
+                  <ProtectedRoute>
+                    <Compare />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/community"
+                element={
+                  <ProtectedRoute>
+                    <Community />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
     </GoogleOAuthProvider>
-  </AuthProvider>
-)
+  );
+};
 
-export default App
+export default App;

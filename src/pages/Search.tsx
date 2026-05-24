@@ -1,109 +1,50 @@
-import Header from '@/components/SmartSearch/Header'
-import MainContent from '@/components/SmartSearch/MainContent'
-import Sidebar from '@/components/SmartSearch/Sidebar'
-import { useUserStore } from '@/store/userStore'
-import { Alert, AssistantFeature } from '@/types'
-import { motion } from 'framer-motion'
-import { useState } from 'react'
+import Header from "@/components/SmartSearch/Header";
+import Sidebar from "@/components/SmartSearch/Sidebar";
+import SearchResults from "@/components/SearchResults";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const newAlert: Alert = {
-  id: 'alert-001',
-  productName: 'Sony WH-1000XM4 Wireless Headphones',
-  productUrl: 'https://www.amazon.com/dp/B08MVCLBYF',
-  currentPrice: 279.99,
-  targetPrice: 250.0,
-  isActive: true,
-  createdAt: '2025-07-20T10:15:00Z'
-}
+type Tab = "search" | "trends" | "compare" | "deals" | "recommendations";
 
 const Search = () => {
-  const [searchResults, setSearchResults] = useState(null)
-  const [isSearching, setIsSearching] = useState(false)
-  const [activeTab, setActiveTab] = useState<'search' | 'assistant' | 'trends'>(
-    'search'
-  )
-  const [activeFeature, setActiveFeature] = useState<AssistantFeature | null>(
-    null
-  )
-  const [selectedSearch, setSelectedSearch] = useState("")
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<Tab>("search");
 
-  const { user } = useUserStore()
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+
+    if (tab === "search") navigate("/search");
+    if (tab === "compare") navigate("/compare");
+    if (tab === "deals") navigate("/deals");
+    if (tab === "recommendations") navigate("/recommendations");
+    if (tab === "trends") navigate("/trends");
+  };
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-indigo-100'>
-      {/* Animated Background */}
-      <div className='absolute inset-0 -z-10 pointer-events-none'>
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0.5 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-          className='absolute -top-32 -left-32 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-pink-400 via-indigo-400 to-blue-400 opacity-20 blur-3xl'
-        />
-        <motion.div
-          initial={{ scale: 0.7, opacity: 0.4 }}
-          animate={{ scale: 1.1, opacity: 0.7 }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            repeatType: 'reverse',
-            delay: 1
-          }}
-          className='absolute top-1/2 right-0 w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-yellow-300 via-pink-300 to-purple-400 opacity-20 blur-2xl'
-        />
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0.3 }}
-          animate={{ scale: 1.05, opacity: 0.5 }}
-          transition={{
-            duration: 2.2,
-            repeat: Infinity,
-            repeatType: 'reverse',
-            delay: 0.5
-          }}
-          className='absolute bottom-0 left-1/2 w-[250px] h-[250px] rounded-full bg-gradient-to-tl from-green-300 via-blue-300 to-indigo-400 opacity-10 blur-2xl'
-        />
-      </div>
+    <div className="h-screen overflow-hidden bg-background">
+      <Header
+        setActiveTab={handleTabChange}
+        setSelectedCompare={() => {}}
+        setSelectedSearch={() => {}}
+      />
 
-      <Header setSelectedSearch={setSelectedSearch} />
+      <div className="flex h-[calc(100vh-118px)] min-h-0 flex-col overflow-hidden sm:h-[calc(100vh-122px)] lg:h-[calc(100vh-83px)] lg:flex-row">
+        <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
 
-      {/* Main Layout: Sidebar + Content */}
-      <div className='max-w-7xl mx-auto px-6 py-8 flex'>
-        {/* Sidebar */}
-        <Sidebar
-          activeFeature={activeFeature}
-          setActiveFeature={setActiveFeature}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        <main className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-hero px-3 py-5 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
+          <div className="pointer-events-none fixed inset-0 -z-10">
+            <div className="absolute -left-24 -top-32 h-[260px] w-[260px] rounded-full bg-primary/20 blur-3xl sm:h-[360px] sm:w-[360px]" />
+            <div className="absolute -right-24 top-1/3 h-[280px] w-[280px] rounded-full bg-sky-400/20 blur-3xl sm:h-[420px] sm:w-[420px]" />
+            <div className="absolute bottom-0 left-1/3 h-[220px] w-[220px] rounded-full bg-violet-400/20 blur-3xl sm:h-[280px] sm:w-[280px]" />
+          </div>
 
-        {/* Main Content */}
-        <MainContent
-          selectedSearch={selectedSearch}
-          setSelectedSearch={setSelectedSearch}
-          alerts={[]}
-          authResult={[]}
-          compareProducts={[]}
-          compareProductsHandler={() => { }}
-          comparedResults={[]}
-          createAlert={() => { }}
-          isComparing={false}
-          isCreatingAlert={false}
-          isSearching={isSearching}
-          newAlert={newAlert}
-          removeCompareProduct={() => { }}
-          setAuthResult={() => { }}
-          setBudget={() => { }}
-          setCompareProducts={() => { }}
-          setIsSearching={setIsSearching}
-          setNewAlert={() => { }}
-          setSearchResults={setSearchResults}
-          history={[]}
-          searchResults={searchResults}
-          activeFeature={activeFeature}
-          activeTab={activeTab}
-        />
+          <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col">
+            <SearchResults onNewSearch={() => navigate("/search")} />
+          </div>
+        </main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Search
+export default Search;

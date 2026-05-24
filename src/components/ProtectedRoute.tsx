@@ -1,12 +1,16 @@
-import { useUserStore } from '@/store/userStore'
+import { useAppAuth } from '@/hooks/useAppAuth'
 import { Navigate, useLocation } from 'react-router-dom'
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useUserStore()
+  const { isAuthenticated, isAuthInitialized } = useAppAuth()
   const location = useLocation()
 
+  if (!isAuthInitialized) {
+    return null
+  }
+
   if (!isAuthenticated) {
-    return <Navigate to="/signin" state={{ from: location }} replace />
+    return <Navigate to="/auth" state={{ from: location }} replace />
   }
 
   return children

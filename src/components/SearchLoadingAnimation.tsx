@@ -1,34 +1,31 @@
-import { useState, useEffect } from "react";
-import { Globe, Search, Zap, ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Globe, Search, Zap, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SearchLoadingAnimationProps {
   query: string;
 }
 
+const steps = [
+  {
+    icon: Search,
+    title: "Analyzing your request",
+    description: "Understanding what you're looking for...",
+  },
+  {
+    icon: Globe,
+    title: "Searching the internet",
+    description: "Scanning stores, products, reviews, and prices...",
+  },
+  {
+    icon: Zap,
+    title: "AI processing",
+    description: "Comparing price, quality, ratings, and product fit...",
+  },
+];
+
 const SearchLoadingAnimation = ({ query }: SearchLoadingAnimationProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-
-  const steps = [
-    {
-      icon: <Search className="h-8 w-8" />,
-      title: "Analyzing your request",
-      description: "Understanding what you're looking for...",
-      color: "from-indigo-500 via-pink-400 to-yellow-400"
-    },
-    {
-      icon: <Globe className="h-8 w-8" />,
-      title: "Searching the internet",
-      description: "Scanning thousands of retailers and products...",
-      color: "from-blue-400 via-green-300 to-indigo-400"
-    },
-    {
-      icon: <Zap className="h-8 w-8" />,
-      title: "AI processing",
-      description: "Comparing prices, reviews, and features...",
-      color: "from-yellow-400 via-pink-400 to-purple-400"
-    }
-  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -38,74 +35,83 @@ const SearchLoadingAnimation = ({ query }: SearchLoadingAnimationProps) => {
     return () => clearInterval(interval);
   }, []);
 
+  const CurrentIcon = steps[currentStep].icon;
+
   return (
-    <section className="flex flex-col items-center justify-center min-h-[60vh] space-y-10 relative">
-      {/* Animated Colorful Background */}
-      <div className="absolute inset-0 -z-10 pointer-events-none">
+    <section className="relative flex min-h-[calc(100vh-220px)] flex-col items-center justify-center overflow-hidden px-3 py-10 text-center sm:min-h-[70vh] sm:px-4">
+      <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0.5 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-          className="absolute -top-24 -left-24 w-[250px] h-[250px] rounded-full bg-gradient-to-br from-pink-400 via-indigo-400 to-blue-400 opacity-20 blur-2xl"
+          animate={{ scale: [0.85, 1.08], opacity: [0.35, 0.65] }}
+          transition={{
+            duration: 2.4,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute -left-24 -top-24 h-[230px] w-[230px] rounded-full bg-primary/25 blur-3xl sm:h-[300px] sm:w-[300px]"
         />
         <motion.div
-          initial={{ scale: 0.7, opacity: 0.4 }}
-          animate={{ scale: 1.1, opacity: 0.7 }}
-          transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", delay: 1 }}
-          className="absolute top-1/2 right-0 w-[180px] h-[180px] rounded-full bg-gradient-to-tr from-yellow-300 via-pink-300 to-purple-400 opacity-20 blur-2xl"
-        />
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0.3 }}
-          animate={{ scale: 1.05, opacity: 0.5 }}
-          transition={{ duration: 2.2, repeat: Infinity, repeatType: "reverse", delay: 0.5 }}
-          className="absolute bottom-0 left-1/2 w-[120px] h-[120px] rounded-full bg-gradient-to-tl from-green-300 via-blue-300 to-indigo-400 opacity-10 blur-2xl"
+          animate={{ scale: [0.8, 1.1], opacity: [0.3, 0.6] }}
+          transition={{
+            duration: 2.8,
+            repeat: Infinity,
+            repeatType: "reverse",
+            delay: 0.5,
+          }}
+          className="absolute -right-24 bottom-0 h-[230px] w-[230px] rounded-full bg-sky-400/25 blur-3xl sm:h-[300px] sm:w-[300px]"
         />
       </div>
 
-      {/* Query Display */}
-      <div className="text-center max-w-2xl">
-        <h2 className="text-2xl font-semibold mb-2">Searching for:</h2>
-        <p className="text-lg text-muted-foreground bg-secondary/50 p-4 rounded-lg">
-          "{query}"
-        </p>
+      <div className="w-full max-w-2xl text-center">
+        <div className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-muted-foreground shadow-soft">
+          <Sparkles className="h-3.5 w-3.5 text-primary" />
+          Live AI search
+        </div>
+
+        <h2 className="mt-5 font-display text-3xl tracking-tight sm:text-5xl">
+          Searching for{" "}
+          <span className="text-gradient italic">your best match</span>
+        </h2>
+
+        <div className="glass mt-5 rounded-2xl px-4 py-4 text-sm text-foreground/80 shadow-soft sm:px-5 sm:text-base">
+          “{query}”
+        </div>
       </div>
 
-      {/* Loading Animation */}
-      <div className="flex flex-col items-center space-y-6">
-        <div className="relative">
-          <div className="w-24 h-24 border-4 border-secondary rounded-full"></div>
-          <div className={`w-24 h-24 border-4 border-t-transparent rounded-full animate-spin absolute top-0 left-0 bg-gradient-to-r ${steps[currentStep].color}`}></div>
+      <div className="mt-10 flex flex-col items-center gap-6 sm:mt-12 sm:gap-7">
+        <div className="relative h-24 w-24 sm:h-28 sm:w-28">
+          <div className="absolute inset-0 rounded-full border border-border/70 bg-card/70 shadow-soft" />
+          <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-primary" />
+          <div className="absolute inset-3 rounded-full bg-primary-gradient opacity-20 blur-xl" />
           <div className="absolute inset-0 flex items-center justify-center text-primary">
-            {steps[currentStep].icon}
+            <CurrentIcon className="h-8 w-8 sm:h-9 sm:w-9" />
           </div>
         </div>
-        <div className="text-center space-y-2">
-          <h3 className="text-xl font-semibold">{steps[currentStep].title}</h3>
-          <p className="text-muted-foreground">{steps[currentStep].description}</p>
+
+        <div className="text-center">
+          <h3 className="text-lg font-semibold tracking-tight sm:text-xl">
+            {steps[currentStep].title}
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {steps[currentStep].description}
+          </p>
         </div>
-      </div>
 
-      {/* Progress Steps */}
-      <div className="flex space-x-4">
-        {steps.map((step, index) => (
-          <div
-            key={index}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index < currentStep
-                ? "bg-gradient-to-r from-indigo-500 via-pink-400 to-yellow-400 shadow"
-                : index === currentStep
-                ? "bg-gradient-to-r from-yellow-400 via-pink-400 to-indigo-500 shadow-lg scale-125"
-                : "bg-secondary"
-            }`}
-          />
-        ))}
-      </div>
+        <div className="flex items-center gap-2">
+          {steps.map((_, index) => (
+            <span
+              key={index}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                index === currentStep
+                  ? "w-8 bg-primary-gradient shadow-glow"
+                  : "w-2.5 bg-muted"
+              }`}
+            />
+          ))}
+        </div>
 
-      {/* Real-time updates */}
-      <div className="text-center space-y-2 max-w-md">
-        <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>Live search in progress...</span>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+          Live search in progress...
         </div>
       </div>
     </section>

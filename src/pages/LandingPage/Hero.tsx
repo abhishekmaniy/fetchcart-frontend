@@ -114,7 +114,7 @@ const Hero = () => {
               <Button
                 size='lg'
                 className='text-lg px-8 py-6 group bg-gradient-to-r from-indigo-500 via-pink-500 to-yellow-400 text-white shadow-xl hover:scale-105 transition-transform'
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/search')}
               >
                 Try Now - It's Free
                 <ArrowRight className='ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform' />

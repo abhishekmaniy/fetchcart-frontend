@@ -1,140 +1,19 @@
-import React, { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import TrendsAnalytics from '../features/TrendsAnalytics'
-import SearchInterface from '../SearchInterface'
-import SearchResults from '../SearchResults'
-import QuickCompare from '../features/QuickCompare'
-import DealAlerts from './AiAssistant/DealAlerts'
-import SmartRecommendations from '../features/SmartRecommendations'
-import { useUserStore } from '@/store/userStore'
-import { Search, Alert, ComparedProduct } from '@/types'
+import SearchInterface from "../SearchInterface";
 
-export type Tab = 'search' | 'trends' | 'compare' | 'deals' | 'recommendations'
-
-interface MainContentProps {
-  selectedCompare: string
-  selectedSearch: string | null
-  setSelectedSearch: (item: string) => void
-  activeTab: Tab
-  searchResults: Search[] | null
-  setSearchResults: (results: Search[] | null) => void
-  isSearching: boolean
-  setIsSearching: (val: boolean) => void
-  compareProducts: string[]
-  setCompareProducts: (val: string[]) => void
-  removeCompareProduct: (index: number) => void
-  compareProductsHandler: () => void
-  isComparing: boolean
-  comparedResults: ComparedProduct[]
-  alerts: Alert[]
-  newAlert: Alert
-  setNewAlert: (val: any) => void
-  isCreatingAlert: boolean
-  createAlert: () => void
-  authResult: any
-  setAuthResult: (val: any) => void
-  setBudget: (val: number[]) => void
-  history: string[]
-  setSelectedCompare: (item: string) => void
-}
-
-const MainContent: React.FC<MainContentProps> = ({
-  selectedCompare,
-  selectedSearch,
-  setSelectedSearch,
-  activeTab,
-  searchResults,
-  setSearchResults,
-  isSearching,
-  setIsSearching,
-  compareProducts,
-  setCompareProducts,
-  removeCompareProduct,
-  compareProductsHandler,
-  isComparing,
-  comparedResults,
-  alerts,
-  newAlert,
-  setNewAlert,
-  isCreatingAlert,
-  createAlert,
-  authResult,
-  setAuthResult,
-  setBudget,
-  history,
-  setSelectedCompare
-}) => {
-  const { user } = useUserStore()
-  console.log(user)
-  console.log(user?.searches?.find(s => s.id === selectedSearch))
-
-  const searchFromStore = useMemo(() => {
-    return user?.searches?.find(s => s.id === selectedSearch)
-  }, [selectedSearch, user])
-
-  console.log(user)
-  console.log(selectedCompare)
-
+const MainContent = () => {
   return (
-    <main className="px-6 py-8">
-      <div className='space-y-8'>
-        {activeTab === 'search' && (
-          <>
-            {searchFromStore ? (
-              <SearchResults
-                key={selectedSearch}
-                results={searchFromStore}
-                onNewSearch={() => {
-                  const newUrl = new URL(window.location.href)
-                  newUrl.searchParams.delete('searchId')
-                  window.history.replaceState({}, '', newUrl.toString())
-                  // Optional: trigger reactivity
-                  window.dispatchEvent(new PopStateEvent('popstate'))
-                  setSelectedSearch(null)
-                  setSearchResults(null)
-                }}
-              />
-            ) : (
-              <SearchInterface
-                onSearchComplete={newSearch => {
-                  console.log("Reach in the onsearchComplete")
-                  console.log(newSearch)
-                  setSearchResults([newSearch])
-                  setSelectedSearch(newSearch.id)
-                  setIsSearching(false)
-                }}
-                isSearching={isSearching}
-                setIsSearching={setIsSearching}
-              />
-            )}
-          </>
-        )}
+    <main className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-hero px-3 py-6 sm:px-5 sm:py-8 lg:px-8">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -left-24 -top-32 h-[260px] w-[260px] rounded-full bg-primary/20 blur-3xl sm:h-[360px] sm:w-[360px]" />
+        <div className="absolute -right-24 top-1/3 h-[280px] w-[280px] rounded-full bg-sky-400/20 blur-3xl sm:h-[420px] sm:w-[420px]" />
+        <div className="absolute bottom-0 left-1/3 h-[220px] w-[220px] rounded-full bg-violet-400/20 blur-3xl sm:h-[280px] sm:w-[280px]" />
+      </div>
 
-        <>
-          {activeTab === 'compare' && <QuickCompare selectedCompare={selectedCompare} setSelectedCompare={setSelectedCompare} />}
-          {activeTab === 'deals' && (
-            <DealAlerts
-              currentDeals={[]}
-              newAlert={newAlert}
-              setNewAlert={setNewAlert}
-              isCreatingAlert={isCreatingAlert}
-              createAlert={createAlert}
-              alerts={alerts}
-            />
-          )}
-          {activeTab === 'recommendations' && <SmartRecommendations />}
-          {!activeTab && (
-            <div className='text-muted'>
-              Select a feature from the sidebar.
-            </div>
-          )}
-        </>
-
-
-        {activeTab === 'trends' && <TrendsAnalytics />}
+      <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col">
+        <SearchInterface />
       </div>
     </main>
-  )
-}
+  );
+};
 
-export default MainContent
+export default MainContent;

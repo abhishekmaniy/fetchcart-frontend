@@ -124,7 +124,7 @@ const WatchDemoModal = ({ isOpen, onClose }: WatchDemoModalProps) => {
                 <Button className="flex-1" onClick={togglePlay}>
                   {isPlaying ? "Pause Demo" : "Watch Demo"}
                 </Button>
-                <Button variant="outline" onClick={() => window.open('/dashboard', '_blank')}>
+                <Button variant="outline" onClick={() => window.open('/search', '_blank')}>
                   Try It Now
                 </Button>
               </div>
