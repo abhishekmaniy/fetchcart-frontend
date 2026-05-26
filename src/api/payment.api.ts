@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import type {
   CreateRazorpayOrderPayload,
   CreateRazorpayOrderResponse,
-  GetCurrentPlanResponse,
+  CurrentPlanResponse,
   VerifyRazorpayPaymentPayload,
   VerifyRazorpayPaymentResponse,
 } from "@/types/payment.types";
@@ -12,7 +12,7 @@ export const createRazorpayOrder = async (
   payload: CreateRazorpayOrderPayload
 ) => {
   const response = await api.post<CreateRazorpayOrderResponse>(
-    "/payments/create-order",
+    "/billing/create-order",
     payload
   );
 
@@ -23,7 +23,7 @@ export const verifyRazorpayPayment = async (
   payload: VerifyRazorpayPaymentPayload
 ) => {
   const response = await api.post<VerifyRazorpayPaymentResponse>(
-    "/payments/verify",
+    "/billing/verify-payment",
     payload
   );
 
@@ -31,8 +31,8 @@ export const verifyRazorpayPayment = async (
 };
 
 export const getCurrentPlan = async () => {
-  const response = await api.get<GetCurrentPlanResponse>(
-    "/payments/current-plan"
+  const response = await api.get<CurrentPlanResponse>(
+    "/billing/current-plan"
   );
 
   return response.data;

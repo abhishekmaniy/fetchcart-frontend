@@ -2,25 +2,41 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
 import AuthPage from "./pages/AuthPage";
 import Checkout from "./pages/Checkout";
-import CheckoutPage from "./pages/CheckoutPage";
 import Community from "./pages/Community";
 import Compare from "./pages/Compare";
+import CompareCreatePage from "./pages/CompareCreate";
 import Dashboard from "./pages/Dashboard";
 import Index from "./pages/LandingPage/Index";
 import NotFound from "./pages/NotFound";
 import Search from "./pages/Search";
-import CompareCreatePage from "./pages/CompareCreate";
+import { useAppAuth } from "./hooks/useAppAuth";
+import History from "./pages/History";
+import VerifyEmail from "./pages/VerifyEmail";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+
+  const { isAuthInitialized } = useAppAuth()
+
+  if (!isAuthInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-sm text-muted-foreground">
+          Loading application...
+        </div>
+      </div>
+    )
+  }
+
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
@@ -56,7 +72,9 @@ const App = () => {
                 }
               />
 
-              {/* <Route path="/checkout" element={<CheckoutPage />} /> */}
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
+
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
 
               {/* search form page */}
               <Route
@@ -112,6 +130,15 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/history"
+                element={
+                  <ProtectedRoute>
+                    <History />
                   </ProtectedRoute>
                 }
               />

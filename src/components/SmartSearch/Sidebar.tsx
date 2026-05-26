@@ -2,59 +2,67 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  TrendingUp,
-  Tag,
-  Star,
   GitCompareArrows,
   HelpCircle,
+  History,
 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-type Tab = "search" | "trends" | "compare" | "deals" | "recommendations";
+type Tab = "search" | "compare" | "history";
 
-interface SidebarProps {
-  activeTab: Tab;
-  setActiveTab: (tab: Tab) => void;
-}
+type SidebarItem = {
+  label: string;
+  shortLabel: string;
+  tab: Tab;
+  path: string;
+  icon: React.ElementType;
+};
 
-const sidebarItems = [
+const sidebarItems: SidebarItem[] = [
   {
     label: "Smart Search",
     shortLabel: "Search",
     tab: "search",
+    path: "/search",
     icon: Search,
   },
   {
     label: "Product Comparison",
     shortLabel: "Compare",
     tab: "compare",
+    path: "/compare",
     icon: GitCompareArrows,
   },
   {
-    label: "Find Best Deals",
-    shortLabel: "Deals",
-    tab: "deals",
-    icon: Tag,
+    label: "History",
+    shortLabel: "History",
+    tab: "history",
+    path: "/history",
+    icon: History,
   },
-  {
-    label: "Recommendations",
-    shortLabel: "For You",
-    tab: "recommendations",
-    icon: Star,
-  },
-  {
-    label: "Trends",
-    shortLabel: "Trends",
-    tab: "trends",
-    icon: TrendingUp,
-  },
-] satisfies {
-  label: string;
-  shortLabel: string;
-  tab: Tab;
-  icon: React.ElementType;
-}[];
+];
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getActiveTab = (): Tab => {
+    const pathname = location.pathname;
+
+    if (pathname.startsWith("/compare")) return "compare";
+    if (pathname.startsWith("/history")) return "history";
+
+    return "search";
+  };
+
+  const activeTab = getActiveTab();
+
+  const handleTabChange = (item: SidebarItem) => {
+    if (location.pathname === item.path) return;
+
+    navigate(item.path);
+  };
+
   return (
     <>
       <aside className="sidebar-glass hidden h-full w-72 shrink-0 flex-col overflow-hidden border-r border-border/60 shadow-soft lg:flex">
@@ -68,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                 key={item.tab}
                 type="button"
                 variant="ghost"
-                onClick={() => setActiveTab(item.tab)}
+                onClick={() => handleTabChange(item)}
                 className={`group w-full justify-start gap-3 rounded-2xl px-4 py-6 text-sm font-medium transition-all ${
                   isActive
                     ? "sidebar-item-active hover:text-white"
@@ -102,12 +110,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
                 <p className="text-sm font-medium text-foreground">
                   Need help?
                 </p>
-                <a
-                  href="/support"
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/support")}
                   className="text-xs text-primary hover:underline"
                 >
                   Contact support
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -124,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
               <button
                 key={item.tab}
                 type="button"
-                onClick={() => setActiveTab(item.tab)}
+                onClick={() => handleTabChange(item)}
                 className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3.5 py-2.5 text-xs font-medium transition-all ${
                   isActive
                     ? "border-primary/40 bg-primary-gradient text-white shadow-glow"

@@ -1,21 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { useAppAuth } from "@/hooks/useAppAuth";
+import type { AppUser, UserPlan } from "@/types/auth.types";
 import { motion } from "framer-motion";
 import {
+  Check,
+  ChevronDown,
   Crown,
-  GitCompareArrows,
-  History,
+  Laptop,
   LogOut,
   Moon,
-  Search,
   Sun,
-  TrendingUp,
+  User,
+  Zap,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import HistorySidebar from "./HistorySidebar";
 
-type TabType = "search" | "trends" | "compare" | "deals" | "recommendations";
+type TabType = "search" | "compare" | "history";
 
 type HeaderProps = {
   setActiveTab?: React.Dispatch<React.SetStateAction<TabType>>;
@@ -23,11 +24,12 @@ type HeaderProps = {
   setSelectedCompare?: (item: string) => void;
 };
 
-type Theme = "light" | "dark";
+type ResolvedTheme = "light" | "dark";
+type ThemeMode = "light" | "dark" | "system";
 
 const THEME_STORAGE_KEY = "fetchcart-theme";
 
-const getSystemTheme = (): Theme => {
+const getSystemTheme = (): ResolvedTheme => {
   if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
     return "dark";
   }
@@ -35,7 +37,7 @@ const getSystemTheme = (): Theme => {
   return "light";
 };
 
-const applyTheme = (theme: Theme) => {
+const applyTheme = (theme: ResolvedTheme) => {
   const root = document.documentElement;
 
   if (theme === "dark") {
@@ -45,6 +47,51 @@ const applyTheme = (theme: Theme) => {
   }
 };
 
+const getThemeLabel = (themeMode: ThemeMode) => {
+  if (themeMode === "light") return "Light";
+  if (themeMode === "dark") return "Dark";
+  return "System";
+};
+
+const getThemeIcon = (themeMode: ThemeMode) => {
+  if (themeMode === "light") return Sun;
+  if (themeMode === "dark") return Moon;
+  return Laptop;
+};
+
+const getUserInitials = (name?: string | null, email?: string | null) => {
+  const fallbackName = name?.trim() || email?.split("@")[0] || "U";
+
+  const parts = fallbackName.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  const firstInitial = parts[0]?.[0] || "";
+  const lastInitial = parts[parts.length - 1]?.[0] || "";
+
+  return `${firstInitial}${lastInitial}`.toUpperCase();
+};
+
+const getPlanLabel = (plan?: UserPlan) => {
+  if (plan === "MAX") return "Max Plan";
+  if (plan === "PRO") return "Pro Plan";
+  return "Free Plan";
+};
+
+const getAvatarRingClass = (plan?: UserPlan) => {
+  if (plan === "MAX") {
+    return "bg-primary-gradient p-[2px]";
+  }
+
+  if (plan === "PRO") {
+    return "rounded-full border-2 border-dotted border-primary p-[2px]";
+  }
+
+  return "rounded-full border border-border bg-background p-[2px]";
+};
+
 const Header = ({
   setActiveTab,
   setSelectedSearch,
@@ -52,35 +99,44 @@ const Header = ({
 }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isAuthInitialized, logout } = useAppAuth();
 
-  const [dark, setDark] = useState(false);
+  const { user, isAuthenticated, isAuthInitialized, logout } = useAppAuth();
+
+  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
   const isLandingPage = location.pathname === "/";
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+    const savedTheme = localStorage.getItem(
+      THEME_STORAGE_KEY
+    ) as ThemeMode | null;
 
-    const initialTheme: Theme =
-      savedTheme === "dark" || savedTheme === "light"
+    const initialThemeMode: ThemeMode =
+      savedTheme === "light" || savedTheme === "dark" || savedTheme === "system"
         ? savedTheme
-        : getSystemTheme();
+        : "system";
 
-    applyTheme(initialTheme);
-    setDark(initialTheme === "dark");
+    const initialResolvedTheme =
+      initialThemeMode === "system" ? getSystemTheme() : initialThemeMode;
+
+    setThemeMode(initialThemeMode);
+    setResolvedTheme(initialResolvedTheme);
+    applyTheme(initialResolvedTheme);
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleSystemThemeChange = () => {
-      const currentSavedTheme = localStorage.getItem(
-        THEME_STORAGE_KEY,
-      ) as Theme | null;
+      const currentThemeMode = localStorage.getItem(
+        THEME_STORAGE_KEY
+      ) as ThemeMode | null;
 
-      if (currentSavedTheme !== "dark" && currentSavedTheme !== "light") {
+      if (!currentThemeMode || currentThemeMode === "system") {
         const systemTheme = getSystemTheme();
 
+        setThemeMode("system");
+        setResolvedTheme(systemTheme);
         applyTheme(systemTheme);
-        setDark(systemTheme === "dark");
       }
     };
 
@@ -91,12 +147,14 @@ const Header = ({
     };
   }, []);
 
-  const toggleTheme = () => {
-    const nextTheme: Theme = dark ? "light" : "dark";
+  const handleThemeChange = (nextThemeMode: ThemeMode) => {
+    const nextResolvedTheme =
+      nextThemeMode === "system" ? getSystemTheme() : nextThemeMode;
 
-    applyTheme(nextTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setDark(nextTheme === "dark");
+    localStorage.setItem(THEME_STORAGE_KEY, nextThemeMode);
+    setThemeMode(nextThemeMode);
+    setResolvedTheme(nextResolvedTheme);
+    applyTheme(nextResolvedTheme);
   };
 
   const handleLogout = () => {
@@ -104,27 +162,15 @@ const Header = ({
     navigate("/");
   };
 
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab?.(tab);
-
-    if (tab === "search") {
-      setSelectedSearch?.("");
-    }
-
-    if (tab === "compare") {
-      setSelectedCompare?.("");
-    }
-
-    navigate("/search");
-  };
-
   if (isLandingPage) {
     return (
       <LandingHeader
-        dark={dark}
+        user={user}
+        themeMode={themeMode}
+        resolvedTheme={resolvedTheme}
         isAuthenticated={isAuthenticated}
         isAuthInitialized={isAuthInitialized}
-        onToggleTheme={toggleTheme}
+        onThemeChange={handleThemeChange}
         onLogout={handleLogout}
       />
     );
@@ -132,31 +178,306 @@ const Header = ({
 
   return (
     <DashboardHeader
-      dark={dark}
+      user={user}
+      themeMode={themeMode}
+      resolvedTheme={resolvedTheme}
       isAuthenticated={isAuthenticated}
       isAuthInitialized={isAuthInitialized}
-      onToggleTheme={toggleTheme}
+      onThemeChange={handleThemeChange}
       onLogout={handleLogout}
-      onTabChange={handleTabChange}
     />
   );
 };
 
 export default Header;
 
+type UserMenuProps = {
+  user: AppUser | null;
+  themeMode: ThemeMode;
+  resolvedTheme: ResolvedTheme;
+  onThemeChange: (themeMode: ThemeMode) => void;
+  onLogout: () => void;
+  size?: "sm" | "md";
+};
+
+function UserMenu({
+  user,
+  themeMode,
+  resolvedTheme,
+  onThemeChange,
+  onLogout,
+  size = "md",
+}: UserMenuProps) {
+  const navigate = useNavigate();
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const [open, setOpen] = useState(false);
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+
+  const plan = user?.plan || user?.userPlan?.effectivePlan || "FREE";
+
+  const initials = useMemo(
+    () => getUserInitials(user?.name, user?.email),
+    [user?.name, user?.email]
+  );
+
+  const avatarSizeClass =
+    size === "sm" ? "h-8 w-8 text-xs" : "h-9 w-9 text-sm";
+
+  const ThemeIcon = getThemeIcon(themeMode);
+
+  const themeOptions: {
+    label: string;
+    value: ThemeMode;
+    icon: React.ElementType;
+  }[] = [
+    {
+      label: "Light",
+      value: "light",
+      icon: Sun,
+    },
+    {
+      label: "Dark",
+      value: "dark",
+      icon: Moon,
+    },
+    {
+      label: "System",
+      value: "system",
+      icon: Laptop,
+    },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!menuRef.current) return;
+
+      if (!menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+        setThemeDropdownOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        setThemeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setOpen(false);
+    setThemeDropdownOpen(false);
+    onLogout();
+  };
+
+  const handleUpgrade = () => {
+    setOpen(false);
+    setThemeDropdownOpen(false);
+    navigate("/checkout");
+  };
+
+  const handleThemeSelect = (nextThemeMode: ThemeMode) => {
+    onThemeChange(nextThemeMode);
+    setThemeDropdownOpen(false);
+  };
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-label="Open user menu"
+        aria-expanded={open}
+        className="rounded-full outline-none transition-all hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <span className={`block rounded-full ${getAvatarRingClass(plan)}`}>
+          <span
+            className={`${avatarSizeClass} flex items-center justify-center rounded-full bg-primary-gradient font-semibold text-white shadow-elegant`}
+          >
+            {initials}
+          </span>
+        </span>
+      </button>
+
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.16, ease: "easeOut" }}
+          className="absolute right-0 top-[calc(100%+10px)] z-[80] w-[300px] overflow-visible rounded-2xl border border-border/70 bg-popover/95 text-popover-foreground shadow-2xl backdrop-blur-xl"
+        >
+          <div className="absolute inset-x-0 top-0 h-px bg-primary-gradient" />
+
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <span className={`block rounded-full ${getAvatarRingClass(plan)}`}>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-gradient text-base font-semibold text-white shadow-elegant">
+                  {initials}
+                </span>
+              </span>
+
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {user?.name || "User"}
+                </p>
+
+                <p className="truncate text-xs text-muted-foreground">
+                  {user?.email || "No email"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-border/60 bg-muted/40 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {plan === "MAX" ? (
+                    <Crown className="h-4 w-4 text-primary" />
+                  ) : plan === "PRO" ? (
+                    <Zap className="h-4 w-4 text-primary" />
+                  ) : (
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  )}
+
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {getPlanLabel(plan)}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                      {plan === "MAX"
+                        ? "Full access enabled"
+                        : plan === "PRO"
+                          ? "Pro features active"
+                          : "Basic access"}
+                    </p>
+                  </div>
+                </div>
+
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    plan === "FREE"
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {plan}
+                </span>
+              </div>
+            </div>
+
+            {plan !== "MAX" && (
+              <Button
+                type="button"
+                onClick={handleUpgrade}
+                className="mt-3 h-10 w-full rounded-xl bg-primary-gradient text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow"
+              >
+                <Crown className="mr-2 h-4 w-4" />
+                {plan === "PRO" ? "Upgrade to Max" : "Upgrade Plan"}
+              </Button>
+            )}
+
+            <div className="my-3 h-px bg-border/70" />
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setThemeDropdownOpen((prev) => !prev)}
+                className="flex h-11 w-full items-center justify-between rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <ThemeIcon className="h-4 w-4" />
+                  Theme
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {getThemeLabel(themeMode)}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      themeDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </span>
+              </button>
+
+              {themeDropdownOpen && (
+                <div className="mt-2 rounded-2xl border border-border/70 bg-background/95 p-1.5 shadow-elegant backdrop-blur-xl">
+                  {themeOptions.map((option) => {
+                    const Icon = option.icon;
+                    const isActive = themeMode === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleThemeSelect(option.value)}
+                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
+                          isActive
+                            ? "bg-primary-gradient text-white"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        }`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <Icon className="h-4 w-4" />
+
+                          <span>
+                            <span className="block text-sm font-medium">
+                              {option.label}
+                            </span>
+                          </span>
+                        </span>
+
+                        {isActive && <Check className="h-4 w-4" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-1 flex h-10 w-full items-center gap-2 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500"
+            >
+              <LogOut className="h-4 w-4" />
+              Log out
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 type SharedHeaderProps = {
-  dark: boolean;
+  user: AppUser | null;
+  themeMode: ThemeMode;
+  resolvedTheme: ResolvedTheme;
   isAuthenticated: boolean;
   isAuthInitialized: boolean;
-  onToggleTheme: () => void;
+  onThemeChange: (themeMode: ThemeMode) => void;
   onLogout: () => void;
 };
 
 function LandingHeader({
-  dark,
+  user,
+  themeMode,
+  resolvedTheme,
   isAuthenticated,
   isAuthInitialized,
-  onToggleTheme,
+  onThemeChange,
   onLogout,
 }: SharedHeaderProps) {
   const navigate = useNavigate();
@@ -177,7 +498,7 @@ function LandingHeader({
           className="flex min-w-0 items-center gap-2 font-semibold tracking-tight"
         >
           <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="FetchCart AI logo"
             className="h-8 w-8 shrink-0"
             draggable={false}
@@ -201,16 +522,6 @@ function LandingHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            aria-label="Toggle theme"
-            title={dark ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-          >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-
           {!isAuthInitialized ? (
             <div className="hidden h-9 w-16 animate-pulse rounded-xl bg-muted sm:block" />
           ) : isAuthenticated ? (
@@ -224,26 +535,23 @@ function LandingHeader({
                 <span className="hidden sm:inline">Dashboard</span>
               </button>
 
-              <button
-                type="button"
-                onClick={onLogout}
-                aria-label="Log out"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 sm:w-auto sm:px-3"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="ml-2 hidden text-sm sm:inline">Logout</span>
-              </button>
+              <UserMenu
+                user={user}
+                themeMode={themeMode}
+                resolvedTheme={resolvedTheme}
+                onThemeChange={onThemeChange}
+                onLogout={onLogout}
+                size="sm"
+              />
             </>
           ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => navigate("/auth")}
-                className="rounded-xl bg-primary-gradient px-3 py-2 text-xs font-medium text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:px-4 sm:text-sm"
-              >
-                Sign in
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => navigate("/auth")}
+              className="rounded-xl bg-primary-gradient px-3 py-2 text-xs font-medium text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:px-4 sm:text-sm"
+            >
+              Sign in
+            </button>
           )}
         </div>
       </div>
@@ -251,18 +559,15 @@ function LandingHeader({
   );
 }
 
-type DashboardHeaderProps = SharedHeaderProps & {
-  onTabChange: (tab: TabType) => void;
-};
-
 function DashboardHeader({
-  dark,
+  user,
+  themeMode,
+  resolvedTheme,
   isAuthenticated,
   isAuthInitialized,
-  onToggleTheme,
+  onThemeChange,
   onLogout,
-  onTabChange,
-}: DashboardHeaderProps) {
+}: SharedHeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -279,7 +584,7 @@ function DashboardHeader({
                 className="flex min-w-0 items-center gap-2 font-semibold tracking-tight"
               >
                 <img
-                  src="/Logo.svg"
+                  src="/logo.svg"
                   alt="FetchCart AI logo"
                   className="h-9 w-9 shrink-0 sm:h-10 sm:w-10 lg:h-9 lg:w-9"
                   draggable={false}
@@ -300,34 +605,17 @@ function DashboardHeader({
                   <span className="hidden min-[380px]:inline">Pro</span>
                 </Button>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={onToggleTheme}
-                  aria-label="Toggle theme"
-                  title={dark ? "Switch to light mode" : "Switch to dark mode"}
-                  className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-accent/70 hover:text-foreground sm:h-10 sm:w-10"
-                >
-                  {dark ? (
-                    <Sun className="h-4 w-4" />
-                  ) : (
-                    <Moon className="h-4 w-4" />
-                  )}
-                </Button>
-
                 {!isAuthInitialized ? (
-                  <div className="h-9 w-9 animate-pulse rounded-xl bg-muted sm:h-10 sm:w-10" />
+                  <div className="h-9 w-9 animate-pulse rounded-full bg-muted sm:h-10 sm:w-10" />
                 ) : isAuthenticated ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-red-500/10 hover:text-red-500 sm:h-10 sm:w-10"
-                    onClick={onLogout}
-                    aria-label="Log out"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
+                  <UserMenu
+                    user={user}
+                    themeMode={themeMode}
+                    resolvedTheme={resolvedTheme}
+                    onThemeChange={onThemeChange}
+                    onLogout={onLogout}
+                    size="sm"
+                  />
                 ) : (
                   <Button
                     size="sm"
@@ -350,45 +638,16 @@ function DashboardHeader({
                 <span>Upgrade Pro</span>
               </Button>
 
-              <HistorySidebar>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 gap-2 rounded-xl text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-                >
-                  <History className="h-4 w-4" />
-                  <span>History</span>
-                </Button>
-              </HistorySidebar>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onToggleTheme}
-                aria-label="Toggle theme"
-                title={dark ? "Switch to light mode" : "Switch to dark mode"}
-                className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-              >
-                {dark ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
-
               {!isAuthInitialized ? (
                 <div className="h-10 w-20 animate-pulse rounded-xl bg-muted" />
               ) : isAuthenticated ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 gap-2 rounded-xl text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
-                  onClick={onLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Log Out</span>
-                </Button>
+                <UserMenu
+                  user={user}
+                  themeMode={themeMode}
+                  resolvedTheme={resolvedTheme}
+                  onThemeChange={onThemeChange}
+                  onLogout={onLogout}
+                />
               ) : (
                 <Button
                   size="sm"
@@ -398,53 +657,6 @@ function DashboardHeader({
                   Sign In
                 </Button>
               )}
-            </div>
-
-            <div className="grid grid-cols-4 gap-1.5 lg:hidden">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onTabChange("search")}
-                className="h-9 rounded-xl px-2 text-xs text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-              >
-                <Search className="mr-1.5 h-3.5 w-3.5" />
-                Search
-              </Button>
-
-              <HistorySidebar>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-full rounded-xl px-2 text-xs text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-                >
-                  <History className="mr-1.5 h-3.5 w-3.5" />
-                  History
-                </Button>
-              </HistorySidebar>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onTabChange("compare")}
-                className="h-9 rounded-xl px-2 text-xs text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-              >
-                <GitCompareArrows className="mr-1.5 h-3.5 w-3.5" />
-                Compare
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onTabChange("trends")}
-                className="h-9 rounded-xl px-2 text-xs text-muted-foreground hover:bg-accent/70 hover:text-foreground"
-              >
-                <TrendingUp className="mr-1.5 h-3.5 w-3.5" />
-                Trends
-              </Button>
             </div>
           </div>
         </div>

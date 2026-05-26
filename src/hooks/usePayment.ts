@@ -53,7 +53,7 @@ export const useCurrentPlanQuery = () => {
 };
 
 type UseRazorpayCheckoutOptions = {
-  onSuccess?: () => void;
+  onSuccess?: () => void | Promise<void>;
   onError?: (error: unknown) => void;
   onPaymentFailed?: (
     response: RazorpayCheckoutFailureResponse
@@ -73,24 +73,49 @@ export const useRazorpayCheckoutMutation = ({
     mutationFn: async (payload: CreateRazorpayOrderPayload) => {
       const orderResponse = await createRazorpayOrder(payload);
 
-      await openRazorpayCheckout({
-        key: orderResponse.razorpay.keyId,
-        amount: orderResponse.order.amount,
-        currency: orderResponse.order.currency,
-        name: orderResponse.razorpay.name,
-        description: orderResponse.razorpay.description,
-        image: orderResponse.razorpay.image,
-        orderId: orderResponse.order.id,
+      /**
+       * Your backend response:
+       * {
+       *   success: true,
+       *   message: "...",
+       *   data: {
+       *     paymentId: "...",
+       *     razorpayOrderId: "order_xxx",
+       *     amount: 49900,
+       *     currency: "INR",
+       *     plan: "PRO",
+       *     key: "rzp_live_xxx"
+       *   }
+       * }
+       */
+      const paymentData = orderResponse.data;
 
-        prefill: {
-          name: orderResponse.user?.name,
-          email: orderResponse.user?.email,
-          contact: orderResponse.user?.contact,
-        },
+      if (!paymentData?.key) {
+        throw new Error("Razorpay key is missing from backend response.");
+      }
+
+      if (!paymentData?.razorpayOrderId) {
+        throw new Error(
+          "Razorpay order id is missing from backend response."
+        );
+      }
+
+      if (!paymentData?.amount) {
+        throw new Error("Payment amount is missing from backend response.");
+      }
+
+      await openRazorpayCheckout({
+        key: paymentData.key,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        name: "FetchCart AI",
+        description: `${paymentData.plan} Monthly Subscription`,
+        orderId: paymentData.razorpayOrderId,
 
         notes: {
-          plan: orderResponse.plan.name,
-          billingCycle: orderResponse.plan.billingCycle,
+          paymentId: paymentData.paymentId,
+          plan: paymentData.plan,
+          billingCycle: "monthly",
         },
 
         theme: {
@@ -112,7 +137,7 @@ export const useRazorpayCheckoutMutation = ({
             queryKey: paymentQueryKeys.currentPlan,
           });
 
-          onSuccess?.();
+          await onSuccess?.();
         },
 
         onFailure: (failureResponse) => {

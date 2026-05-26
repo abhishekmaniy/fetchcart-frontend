@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Check,
   CreditCard,
+  Crown,
   Loader2,
   Shield,
   Sparkles,
+  Star,
   Zap,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,56 +20,145 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-
 import { useToast } from "@/hooks/use-toast";
-import {
-  useCurrentPlanQuery,
-  useRazorpayCheckoutMutation,
-} from "@/hooks/usePayment";
+import { useAppAuth } from "@/hooks/useAppAuth";
+import { useAppStore } from "@/store/app.store";
+import { useRazorpayCheckoutMutation } from "@/hooks/usePayment";
+import type { UserPlan } from "@/types/auth.types";
 
 const SEARCH_PAGE_ROUTE = "/search";
 
-const MONTHLY_PLAN = {
-  label: "Monthly",
-  price: 499,
-  originalPrice: 799,
-  description: "Best for unlocking Pro features every month",
+type PaidPlan = Extract<UserPlan, "PRO" | "MAX">;
+
+type PlanCardConfig = {
+  plan: PaidPlan;
+  label: string;
+  badge: string;
+  price: number;
+  originalPrice: number;
+  description: string;
+  icon: typeof Zap;
+  features: string[];
+  highlighted?: boolean;
 };
 
-const proFeatures = [
-  "Unlimited AI product searches",
-  "Advanced product comparison",
-  "Save liked products",
-  "Smart recommendations",
-  "Faster product extraction",
-  "Priority access to new features",
+const PLAN_ORDER: Record<UserPlan, number> = {
+  FREE: 0,
+  PRO: 1,
+  MAX: 2,
+};
+
+const MONTHLY_PLANS: PlanCardConfig[] = [
+  {
+    plan: "PRO",
+    label: "Pro Monthly",
+    badge: "Popular",
+    price: 499,
+    originalPrice: 799,
+    description: "Best for premium AI product discovery every month.",
+    icon: Zap,
+    highlighted: false,
+    features: [
+      "Unlimited AI product searches",
+      "Advanced product comparison",
+      "Save liked products",
+      "Smart recommendations",
+      "Faster product extraction",
+      "Priority access to new features",
+    ],
+  },
+  {
+    plan: "MAX",
+    label: "Max Monthly",
+    badge: "Best Value",
+    price: 999,
+    originalPrice: 1499,
+    description: "For power users who want the highest limits and fastest flow.",
+    icon: Crown,
+    highlighted: true,
+    features: [
+      "Everything in Pro",
+      "Highest product search limits",
+      "Advanced comparison insights",
+      "Priority Razorpay verification",
+      "Early access to premium tools",
+      "Best extraction speed and reliability",
+    ],
+  },
 ];
+
+const getPlanLabel = (plan: UserPlan) => {
+  if (plan === "MAX") return "Max Plan";
+  if (plan === "PRO") return "Pro Plan";
+  return "Free Plan";
+};
+
+const formatDate = (date: string | null | undefined) => {
+  if (!date) return null;
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const {
-    data: currentPlanData,
-    isLoading: isCurrentPlanLoading,
-    isError: isCurrentPlanError,
-    refetch: refetchCurrentPlan,
-  } = useCurrentPlanQuery();
+  const { user, plan: currentPlan } = useAppAuth();
+  const refreshCurrentUser = useAppStore((state) => state.refreshCurrentUser);
+
+  const [selectedPlan, setSelectedPlan] = useState<PaidPlan>(() => {
+    if (currentPlan === "PRO") return "MAX";
+    return "PRO";
+  });
+
+  const selectedPlanConfig = useMemo(
+    () => MONTHLY_PLANS.find((item) => item.plan === selectedPlan)!,
+    [selectedPlan]
+  );
+
+  const currentPlanRank = PLAN_ORDER[currentPlan];
+  const selectedPlanRank = PLAN_ORDER[selectedPlan];
+
+  const isCurrentPlanMax = currentPlan === "MAX";
+
+  const isSelectedPlanAlreadyActive =
+    currentPlanRank >= selectedPlanRank && currentPlan !== "FREE";
+
+  const planExpiresAt = formatDate(user?.userPlan?.expiresAt);
+
+  const discount = Math.round(
+    ((selectedPlanConfig.originalPrice - selectedPlanConfig.price) /
+      selectedPlanConfig.originalPrice) *
+      100
+  );
+
+  const savings = selectedPlanConfig.originalPrice - selectedPlanConfig.price;
 
   const razorpayCheckoutMutation = useRazorpayCheckoutMutation({
     onSuccess: async () => {
-      await refetchCurrentPlan();
+      await refreshCurrentUser();
 
       toast({
         title: "Plan upgraded successfully",
-        description: "Your Pro monthly plan is now active.",
+        description: `Your ${selectedPlanConfig.label} plan is now active.`,
       });
+
+      navigate(SEARCH_PAGE_ROUTE);
     },
 
-    onError: () => {
+    onError: (error) => {
+      console.error("RAZORPAY_CHECKOUT_ERROR", error);
+
       toast({
         title: "Unable to start payment",
-        description: "Please try again after some time.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please try again after some time.",
         variant: "destructive",
       });
     },
@@ -91,22 +181,14 @@ const Checkout = () => {
     },
   });
 
-  const discount = Math.round(
-    ((MONTHLY_PLAN.originalPrice - MONTHLY_PLAN.price) /
-      MONTHLY_PLAN.originalPrice) *
-      100
-  );
-
-  const currentPlan = currentPlanData?.plan;
-
-  const hasActivePaidPlan =
-    currentPlan?.name === "PRO" &&
-    currentPlan?.status === "ACTIVE";
-
   const handleUpgrade = () => {
+    if (isSelectedPlanAlreadyActive) {
+      navigate(SEARCH_PAGE_ROUTE);
+      return;
+    }
+
     razorpayCheckoutMutation.mutate({
-      plan: "PRO",
-      billingCycle: "monthly",
+      plan: selectedPlan,
     });
   };
 
@@ -114,114 +196,42 @@ const Checkout = () => {
     navigate(SEARCH_PAGE_ROUTE);
   };
 
-  if (isCurrentPlanLoading) {
+  if (isCurrentPlanMax) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md border-border/70 shadow-sm">
-          <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-6">
+        <Card className="w-full max-w-xl overflow-hidden border-border/70 shadow-sm">
+          <div className="h-1 bg-primary-gradient" />
+
+          <CardContent className="space-y-6 p-8 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <Crown className="h-10 w-10 text-primary" />
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold">
-                Checking your current plan
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Please wait while we verify your subscription.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (isCurrentPlanError) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md border-border/70 shadow-sm">
-          <CardContent className="p-8 text-center space-y-5">
-            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-              <Shield className="h-6 w-6 text-destructive" />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-semibold">
-                Could not load your plan
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Please retry or go back to search.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate(-1)}
-              >
-                Go Back
-              </Button>
-
-              <Button
-                className="w-full"
-                onClick={() => refetchCurrentPlan()}
-              >
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (hasActivePaidPlan) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-6">
-        <Card className="w-full max-w-xl border-border/70 shadow-sm overflow-hidden">
-          <CardContent className="p-8 text-center space-y-6">
-            <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-950/40 flex items-center justify-center mx-auto">
-              <Check className="h-10 w-10 text-green-600" />
-            </div>
-
-            <div>
-              <Badge className="mb-3" variant="secondary">
-                Pro Plan Active
+              <Badge className="mb-3 bg-primary/10 text-primary hover:bg-primary/10">
+                Max Plan Active
               </Badge>
 
               <h1 className="text-2xl font-bold">
-                You already have an active plan
+                You already have the highest plan
               </h1>
 
-              <p className="text-muted-foreground mt-2">
-                Your monthly Pro plan is active. You can continue using
-                premium search features.
+              <p className="mt-2 text-muted-foreground">
+                Your Max monthly plan is active. You can continue using all
+                premium FetchCart AI features.
               </p>
             </div>
 
-            {currentPlan?.expiresAt && (
+            {planExpiresAt && (
               <div className="rounded-xl border bg-muted/40 p-4 text-sm">
-                <span className="text-muted-foreground">
-                  Plan expires on:{" "}
-                </span>
-                <span className="font-medium">
-                  {new Date(currentPlan.expiresAt).toLocaleDateString(
-                    "en-IN",
-                    {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </span>
+                <span className="text-muted-foreground">Plan expires on: </span>
+                <span className="font-medium">{planExpiresAt}</span>
               </div>
             )}
 
             <Button
               size="lg"
-              className="w-full"
+              className="w-full bg-primary-gradient text-white shadow-elegant hover:shadow-glow"
               onClick={handleGoToSearch}
             >
               Go to Search
@@ -234,147 +244,222 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className="mx-auto max-w-6xl p-6">
+        <div className="mb-8 flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
 
           <div>
             <h1 className="text-2xl font-bold">
-              Upgrade to FetchCart Pro
+              Choose your FetchCart AI plan
             </h1>
+
             <p className="text-sm text-muted-foreground">
-              Unlock premium product discovery and comparison features.
+              Current plan:{" "}
+              <span className="font-medium text-foreground">
+                {getPlanLabel(currentPlan)}
+              </span>
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="border-border/70 shadow-sm">
-              <CardHeader>
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Pro Monthly Plan
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Continue with secure Razorpay checkout and unlock
-                      premium features.
-                    </p>
-                  </div>
-
-                  <Badge variant="secondary">
-                    Save {discount}%
-                  </Badge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                <div className="rounded-2xl border bg-muted/30 p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Monthly Plan
-                      </p>
-
-                      <div className="mt-2 flex items-end gap-2">
-                        <span className="text-4xl font-bold">
-                          ₹{MONTHLY_PLAN.price.toLocaleString("en-IN")}
-                        </span>
-
-                        <span className="text-sm text-muted-foreground line-through mb-1">
-                          ₹
-                          {MONTHLY_PLAN.originalPrice.toLocaleString(
-                            "en-IN"
-                          )}
-                        </span>
-
-                        <span className="text-sm text-muted-foreground mb-1">
-                          / month
-                        </span>
-                      </div>
-
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {MONTHLY_PLAN.description}
-                      </p>
-                    </div>
-
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Zap className="h-6 w-6 text-primary" />
-                    </div>
-                  </div>
+        {currentPlan !== "FREE" && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <Check className="h-5 w-5 text-primary" />
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-4">
-                    What you will get
-                  </h3>
+                  <h2 className="font-semibold">
+                    Your {getPlanLabel(currentPlan)} is active
+                  </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {proFeatures.map((feature) => (
-                      <div
-                        key={feature}
-                        className="flex items-center gap-3 rounded-xl border bg-background p-3"
-                      >
-                        <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-950/40 flex items-center justify-center shrink-0">
-                          <Check className="h-4 w-4 text-green-600" />
-                        </div>
-
-                        <span className="text-sm font-medium">
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-200 bg-green-50/60 dark:bg-green-950/10 dark:border-green-900/40">
-              <CardContent className="p-5 flex items-start gap-3">
-                <Shield className="h-5 w-5 text-green-600 mt-0.5" />
-
-                <div>
-                  <h3 className="font-semibold text-green-800 dark:text-green-400">
-                    Secure payment
-                  </h3>
-                  <p className="text-sm text-green-700 dark:text-green-500 mt-1">
-                    Payment is processed securely by Razorpay. Your
-                    payment will be verified by our backend before your
-                    plan is activated.
+                  <p className="text-sm text-muted-foreground">
+                    {planExpiresAt
+                      ? `Your plan expires on ${planExpiresAt}.`
+                      : "Your current plan is active."}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <Button variant="outline" onClick={handleGoToSearch}>
+                Go to Search
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">
+          <div className="space-y-6 lg:col-span-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {MONTHLY_PLANS.map((planItem) => {
+                const Icon = planItem.icon;
+                const isSelected = selectedPlan === planItem.plan;
+                const planRank = PLAN_ORDER[planItem.plan];
+
+                const isAlreadyIncluded =
+                  currentPlanRank >= planRank && currentPlan !== "FREE";
+
+                const itemDiscount = Math.round(
+                  ((planItem.originalPrice - planItem.price) /
+                    planItem.originalPrice) *
+                    100
+                );
+
+                return (
+                  <button
+                    key={planItem.plan}
+                    type="button"
+                    onClick={() => setSelectedPlan(planItem.plan)}
+                    disabled={isAlreadyIncluded}
+                    className={`group relative rounded-3xl border bg-card p-1 text-left transition-all ${
+                      isSelected
+                        ? "border-primary shadow-glow"
+                        : "border-border/70 shadow-sm hover:-translate-y-1 hover:border-primary/40 hover:shadow-elegant"
+                    } ${
+                      isAlreadyIncluded
+                        ? "cursor-not-allowed opacity-70"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    {planItem.highlighted && (
+                      <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
+                        <Badge className="bg-primary-gradient text-white shadow-elegant">
+                          Recommended
+                        </Badge>
+                      </div>
+                    )}
+
+                    <div className="rounded-[20px] bg-background p-5">
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div>
+                          <div className="mb-3 flex items-center gap-2">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                              <Icon className="h-5 w-5 text-primary" />
+                            </div>
+
+                            <Badge variant="secondary">
+                              {isAlreadyIncluded
+                                ? "Current"
+                                : planItem.badge}
+                            </Badge>
+                          </div>
+
+                          <h2 className="text-xl font-bold">
+                            {planItem.label}
+                          </h2>
+
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {planItem.description}
+                          </p>
+                        </div>
+
+                        <div
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                            isSelected
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                        </div>
+                      </div>
+
+                      <div className="mb-5">
+                        <div className="flex items-end gap-2">
+                          <span className="text-4xl font-bold">
+                            ₹{planItem.price.toLocaleString("en-IN")}
+                          </span>
+
+                          <span className="mb-1 text-sm text-muted-foreground line-through">
+                            ₹{planItem.originalPrice.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                          <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/10">
+                            Save {itemDiscount}%
+                          </Badge>
+
+                          <span className="text-sm text-muted-foreground">
+                            / month
+                          </span>
+                        </div>
+                      </div>
+
+                      <Separator className="mb-5" />
+
+                      <div className="space-y-3">
+                        {planItem.features.map((feature) => (
+                          <div key={feature} className="flex items-center gap-3">
+                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40">
+                              <Check className="h-3.5 w-3.5 text-green-600" />
+                            </div>
+
+                            <span className="text-sm font-medium">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="space-y-6">
-            <Card className="border-border/70 shadow-sm sticky top-6">
+            <Card className="sticky top-6 border-border/70 shadow-sm">
               <CardHeader>
-                <CardTitle>Payment Summary</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Payment Summary
+                </CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-4">
+                <div className="rounded-2xl border bg-muted/30 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Selected Plan
+                      </p>
+
+                      <h3 className="mt-1 text-lg font-bold">
+                        {selectedPlanConfig.label}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {selectedPlanConfig.description}
+                      </p>
+                    </div>
+
+                    {selectedPlan === "MAX" ? (
+                      <Crown className="h-6 w-6 text-primary" />
+                    ) : (
+                      <Zap className="h-6 w-6 text-primary" />
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Plan
-                    </span>
-                    <span className="font-medium">Pro</span>
+                    <span className="text-muted-foreground">Current Plan</span>
+                    <span className="font-medium">{currentPlan}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Billing
-                    </span>
+                    <span className="text-muted-foreground">New Plan</span>
+                    <span className="font-medium">{selectedPlan}</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Billing</span>
                     <span className="font-medium">Monthly</span>
                   </div>
 
@@ -383,21 +468,18 @@ const Checkout = () => {
                       Original Price
                     </span>
                     <span className="line-through">
-                      ₹
-                      {MONTHLY_PLAN.originalPrice.toLocaleString(
-                        "en-IN"
-                      )}
+                      ₹{selectedPlanConfig.originalPrice.toLocaleString("en-IN")}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-green-600">
                     <span>Savings</span>
-                    <span>
-                      -₹
-                      {(
-                        MONTHLY_PLAN.originalPrice - MONTHLY_PLAN.price
-                      ).toLocaleString("en-IN")}
-                    </span>
+                    <span>-₹{savings.toLocaleString("en-IN")}</span>
+                  </div>
+
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>{discount}%</span>
                   </div>
 
                   <Separator />
@@ -405,26 +487,34 @@ const Checkout = () => {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span>
-                      ₹{MONTHLY_PLAN.price.toLocaleString("en-IN")}
+                      ₹{selectedPlanConfig.price.toLocaleString("en-IN")}
                     </span>
                   </div>
                 </div>
 
                 <Button
                   size="lg"
-                  className="w-full"
+                  className="w-full bg-primary-gradient text-white shadow-elegant hover:shadow-glow"
                   onClick={handleUpgrade}
-                  disabled={razorpayCheckoutMutation.isPending}
+                  disabled={
+                    razorpayCheckoutMutation.isPending ||
+                    isSelectedPlanAlreadyActive
+                  }
                 >
                   {razorpayCheckoutMutation.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Opening Checkout...
+                    </>
+                  ) : isSelectedPlanAlreadyActive ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Already Active
                     </>
                   ) : (
                     <>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Pay with Razorpay
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Proceed to Razorpay
                     </>
                   )}
                 </Button>
@@ -434,12 +524,12 @@ const Checkout = () => {
                   className="w-full"
                   onClick={handleGoToSearch}
                 >
-                  Continue with Free Plan
+                  Continue with {getPlanLabel(currentPlan)}
                 </Button>
 
-                <p className="text-xs text-muted-foreground text-center">
-                  Your monthly plan will activate only after successful
-                  payment verification.
+                <p className="text-center text-xs text-muted-foreground">
+                  Your monthly plan will activate only after successful payment
+                  verification.
                 </p>
               </CardContent>
             </Card>

@@ -1,10 +1,12 @@
+import { AuthProvider } from "@/constants/auth.enums";
 import {
+  useForgotPasswordMutation,
   useLoginMutation,
   useRegisterMutation,
 } from "@/hooks/useAuthMutations";
 import { setAccessToken } from "@/lib/api";
 import { useAppStore } from "@/store/app.store";
-import { useUserStore } from "@/store/userStore";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -18,37 +20,148 @@ import {
   Zap,
 } from "lucide-react";
 import { useState, type InputHTMLAttributes, type ReactNode } from "react";
-import { useForm } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useForm,
+  type FieldError,
+  type UseFormRegisterReturn,
+  type UseFormSetError,
+} from "react-hook-form";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { z } from "zod";
 
-type LoginFormValues = {
-  email: string;
-  password: string;
-};
-
-type RegisterFormValues = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+type AuthMode = "login" | "register";
 
 type Message = {
   type: "success" | "error";
   text: string;
 } | null;
 
+const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required.")
+    .email("Please enter a valid email address."),
+  password: z.string().min(1, "Password is required."),
+});
+
+const registerSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Name is required.")
+      .max(60, "Name must be less than 60 characters."),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Email is required.")
+      .email("Please enter a valid email address."),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters.")
+      .max(100, "Password must be less than 100 characters."),
+    confirmPassword: z.string().min(1, "Confirm password is required."),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match.",
+  });
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+const getRedirectPath = (state: unknown) => {
+  if (
+    state &&
+    typeof state === "object" &&
+    "from" in state &&
+    state.from &&
+    typeof state.from === "object" &&
+    "pathname" in state.from &&
+    typeof state.from.pathname === "string"
+  ) {
+    return state.from.pathname;
+  }
+
+  return "/search";
+};
+
+const getApiErrorMessage = (
+  error: unknown,
+  fallback = "Something went wrong. Please try again."
+) => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "response" in error &&
+    error.response &&
+    typeof error.response === "object" &&
+    "data" in error.response &&
+    error.response.data &&
+    typeof error.response.data === "object" &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
+const applyApiFieldErrors = <TFormValues extends Record<string, unknown>>(
+  error: unknown,
+  setError: UseFormSetError<TFormValues>
+) => {
+  const responseData =
+    error &&
+    typeof error === "object" &&
+    "response" in error &&
+    error.response &&
+    typeof error.response === "object" &&
+    "data" in error.response
+      ? error.response.data
+      : null;
+
+  if (!responseData || typeof responseData !== "object") return;
+
+  const fieldErrors =
+    "errors" in responseData
+      ? responseData.errors
+      : "fieldErrors" in responseData
+        ? responseData.fieldErrors
+        : null;
+
+  if (!fieldErrors || typeof fieldErrors !== "object") return;
+
+  Object.entries(fieldErrors).forEach(([field, value]) => {
+    const message = Array.isArray(value)
+      ? String(value[0] || "")
+      : typeof value === "string"
+        ? value
+        : "";
+
+    if (!message) return;
+
+    setError(field as Parameters<UseFormSetError<TFormValues>>[0], {
+      type: "server",
+      message,
+    });
+  });
+};
+
 const AuthPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentMode =
-    searchParams.get("mode") === "register" ? "register" : "login";
+  const [currentMode, setCurrentMode] = useState<AuthMode>("login");
 
   return (
     <main className="auth-page">
       <Link to="/" className="auth-back-link">
         <ArrowLeft className="size-4" />
-        {/* Back home */}
       </Link>
 
       <div className="auth-layout">
@@ -65,13 +178,9 @@ const AuthPage = () => {
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               >
                 {currentMode === "login" ? (
-                  <LoginForm
-                    onSwitch={() => setSearchParams({ mode: "register" })}
-                  />
+                  <LoginForm onSwitch={() => setCurrentMode("register")} />
                 ) : (
-                  <RegisterForm
-                    onSwitch={() => setSearchParams({ mode: "login" })}
-                  />
+                  <RegisterForm onSwitch={() => setCurrentMode("login")} />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -121,6 +230,7 @@ const BrandPanel = () => {
               rotate="-4deg"
               tone="primary"
             />
+
             <FloatingMini
               className="auth-card-two"
               title="iPhone 15 Pro"
@@ -128,6 +238,7 @@ const BrandPanel = () => {
               tone="violet"
               rotate="2deg"
             />
+
             <FloatingMini
               className="auth-card-three"
               title="Nike Pegasus 41"
@@ -188,37 +299,156 @@ const FloatingMini = ({
 
 const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
   const navigate = useNavigate();
-  const { setUser } = useUserStore();
+  const location = useLocation();
+
+  const refreshCurrentUser = useAppStore((state) => state.refreshCurrentUser);
+  const logout = useAppStore((state) => state.logout);
 
   const loginMutation = useLoginMutation();
+  const forgotPasswordMutation = useForgotPasswordMutation();
 
   const [message, setMessage] = useState<Message>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
-    defaultValues: { email: "", password: "" },
+    resolver: zodResolver(loginSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
+
+  const completeLoginFlow = async (
+    accessToken: string,
+    successMessage: string
+  ) => {
+    setAccessToken(accessToken);
+
+    try {
+      await refreshCurrentUser();
+
+      toast.success(successMessage);
+
+      const redirectPath = getRedirectPath(location.state);
+
+      navigate(redirectPath, { replace: true });
+    } catch (error) {
+      console.error("AUTH_PAGE_REFRESH_USER_ERROR", error);
+
+      logout();
+
+      const errorMessage =
+        "Login succeeded, but failed to load your profile. Please try again.";
+
+      setMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
+
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setMessage(null);
+    form.clearErrors("root.server");
+
+    const email = form.getValues("email")?.trim();
+
+    if (!email) {
+      form.setError("email", {
+        type: "manual",
+        message: "Please enter your email first.",
+      });
+
+      toast.error("Please enter your email first.");
+      return;
+    }
+
+    const emailValidation = loginSchema.shape.email.safeParse(email);
+
+    if (!emailValidation.success) {
+      form.setError("email", {
+        type: "manual",
+        message: "Please enter a valid email address.",
+      });
+
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      const data = await forgotPasswordMutation.mutateAsync({
+        email,
+      });
+
+      const successMessage =
+        data.message || "Successfully sent link for updating password.";
+
+      toast.success(successMessage);
+
+      setMessage({
+        type: "success",
+        text: "Password reset link sent. Please check your email.",
+      });
+    } catch (error) {
+      const errorMessage = getApiErrorMessage(
+        error,
+        "Failed to send reset password link. Please try again."
+      );
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
+
+      setMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      toast.error(errorMessage);
+    }
+  };
 
   const submitManual = async (values: LoginFormValues) => {
     setMessage(null);
+    form.clearErrors("root.server");
 
     try {
       const data = await loginMutation.mutateAsync({
-        provider: "credentials",
-        email: values.email,
+        provider: AuthProvider.CREDENTIALS,
+        email: values.email.trim(),
         password: values.password,
       });
 
-      if (data.user && data.accessToken) {
-        setUser(data.user);
-        setAccessToken(data.accessToken);
-        useAppStore.getState().setAuthenticated(true);
-        toast.success(data.message || "Login successful");
-        navigate("/search");
+      if (!data.accessToken) {
+        throw new Error("Access token missing from login response.");
       }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message || "Login failed. Try again.";
+
+      await completeLoginFlow(
+        data.accessToken,
+        data.message || "Login successful"
+      );
+    } catch (error) {
+      applyApiFieldErrors<LoginFormValues>(error, form.setError);
+
+      const errorMessage = getApiErrorMessage(
+        error,
+        "Login failed. Try again."
+      );
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
 
       setMessage({
         type: "error",
@@ -231,30 +461,43 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
   const submitGoogle = async (googleCredential: CredentialResponse) => {
     setMessage(null);
+    form.clearErrors("root.server");
 
     if (!googleCredential.credential) {
       const errorMessage = "Google login did not return credentials.";
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
+
       setMessage({ type: "error", text: errorMessage });
       toast.error(errorMessage);
+
       return;
     }
 
     try {
       const data = await loginMutation.mutateAsync({
-        provider: "google",
+        provider: AuthProvider.GOOGLE,
         idToken: googleCredential.credential,
       });
 
-      if (data.user && data.accessToken) {
-        setUser(data.user);
-        setAccessToken(data.accessToken);
-        useAppStore.getState().setAuthenticated(true);
-        toast.success(data.message || "Google login successful");
-        navigate("/search");
+      if (!data.accessToken) {
+        throw new Error("Access token missing from Google login response.");
       }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message || "Google login failed.";
+
+      await completeLoginFlow(
+        data.accessToken,
+        data.message || "Google login successful"
+      );
+    } catch (error) {
+      const errorMessage = getApiErrorMessage(error, "Google login failed.");
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
 
       setMessage({
         type: "error",
@@ -265,7 +508,9 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
     }
   };
 
-  const isLoading = loginMutation.isPending;
+  const isLoginLoading = loginMutation.isPending;
+  const isForgotPasswordLoading = forgotPasswordMutation.isPending;
+  const isLoading = isLoginLoading || isForgotPasswordLoading;
 
   return (
     <div>
@@ -275,7 +520,7 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
       </p>
 
       <div className="auth-google-wrap">
-        {loginMutation.isPending ? (
+        {isLoginLoading ? (
           <button type="button" disabled className="auth-submit-btn">
             <Loader2 className="size-4 animate-spin" />
             Signing in...
@@ -285,6 +530,12 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
             onSuccess={submitGoogle}
             onError={() => {
               const errorMessage = "Google sign-in failed. Please try again.";
+
+              form.setError("root.server", {
+                type: "server",
+                message: errorMessage,
+              });
+
               setMessage({ type: "error", text: errorMessage });
               toast.error(errorMessage);
             }}
@@ -301,7 +552,8 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
           type="email"
           placeholder="you@example.com"
           disabled={isLoading}
-          {...form.register("email", { required: true })}
+          registration={form.register("email")}
+          error={form.formState.errors.email}
         />
 
         <PasswordField
@@ -310,17 +562,36 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
           show={showPassword}
           setShow={setShowPassword}
           disabled={isLoading}
-          register={form.register("password", { required: true })}
+          registration={form.register("password")}
+          error={form.formState.errors.password}
           rightLink={
-            <a href="#" className="auth-forgot-link">
-              Forgot password?
-            </a>
+            <button
+              type="button"
+              className="auth-forgot-link inline-flex items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleForgotPassword}
+              disabled={isLoading}
+            >
+              {isForgotPasswordLoading && (
+                <Loader2 className="size-3.5 animate-spin" />
+              )}
+              {isForgotPasswordLoading ? "Sending..." : "Forgot password?"}
+            </button>
           }
         />
 
-        {message && <MessageBox message={message} />}
+        {(message || form.formState.errors.root?.server?.message) && (
+          <MessageBox
+            message={{
+              type: message?.type || "error",
+              text:
+                form.formState.errors.root?.server?.message ||
+                message?.text ||
+                "Login failed. Try again.",
+            }}
+          />
+        )}
 
-        <SubmitButton isLoading={loginMutation.isPending} disabled={isLoading}>
+        <SubmitButton isLoading={isLoginLoading} disabled={isLoading}>
           Sign in
         </SubmitButton>
       </form>
@@ -336,6 +607,13 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
 };
 
 const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const refreshCurrentUser = useAppStore((state) => state.refreshCurrentUser);
+  const logout = useAppStore((state) => state.logout);
+
+  const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
 
   const [message, setMessage] = useState<Message>(null);
@@ -343,6 +621,9 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
       name: "",
       email: "",
@@ -351,25 +632,55 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
     },
   });
 
+  const completeGoogleSignupFlow = async (
+    accessToken: string,
+    successMessage: string
+  ) => {
+    setAccessToken(accessToken);
+
+    try {
+      await refreshCurrentUser();
+
+      toast.success(successMessage);
+
+      const redirectPath = getRedirectPath(location.state);
+
+      navigate(redirectPath, { replace: true });
+    } catch (error) {
+      console.error("AUTH_PAGE_REFRESH_USER_ERROR", error);
+
+      logout();
+
+      const errorMessage =
+        "Signup succeeded, but failed to load your profile. Please try again.";
+
+      setMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
+
+      toast.error(errorMessage);
+    }
+  };
+
   const submitManual = async (values: RegisterFormValues) => {
     setMessage(null);
-
-    if (values.password !== values.confirmPassword) {
-      const errorMessage = "Passwords do not match.";
-      setMessage({ type: "error", text: errorMessage });
-      toast.error(errorMessage);
-      return;
-    }
+    form.clearErrors("root.server");
 
     try {
       const data = await registerMutation.mutateAsync({
-        name: values.name,
-        email: values.email,
+        name: values.name.trim(),
+        email: values.email.trim(),
         password: values.password,
       });
 
       const successMessage =
-        data.message || "Account created. Please verify your email.";
+        data?.message || "Account created. Please sign in.";
 
       setMessage({
         type: "success",
@@ -380,12 +691,21 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
       form.reset();
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         onSwitch();
-      }, 800);
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message || "Signup failed. Try again.";
+      }, 700);
+    } catch (error) {
+      applyApiFieldErrors<RegisterFormValues>(error, form.setError);
+
+      const errorMessage = getApiErrorMessage(
+        error,
+        "Signup failed. Try again."
+      );
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
 
       setMessage({
         type: "error",
@@ -396,7 +716,65 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
     }
   };
 
-  const isLoading = registerMutation.isPending;
+  const submitGoogle = async (googleCredential: CredentialResponse) => {
+    setMessage(null);
+    form.clearErrors("root.server");
+
+    if (!googleCredential.credential) {
+      const errorMessage = "Google signup did not return credentials.";
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
+
+      setMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      toast.error(errorMessage);
+
+      return;
+    }
+
+    try {
+      const data = await loginMutation.mutateAsync({
+        provider: AuthProvider.GOOGLE,
+        idToken: googleCredential.credential,
+      });
+
+      if (!data.accessToken) {
+        throw new Error("Access token missing from Google signup response.");
+      }
+
+      await completeGoogleSignupFlow(
+        data.accessToken,
+        data.message || "Google signup successful"
+      );
+    } catch (error) {
+      const errorMessage = getApiErrorMessage(
+        error,
+        "Google signup failed. Please try again."
+      );
+
+      form.setError("root.server", {
+        type: "server",
+        message: errorMessage,
+      });
+
+      setMessage({
+        type: "error",
+        text: errorMessage,
+      });
+
+      toast.error(errorMessage);
+    }
+  };
+
+  const isManualSignupLoading = registerMutation.isPending;
+  const isGoogleSignupLoading = loginMutation.isPending;
+  const isLoading = isManualSignupLoading || isGoogleSignupLoading;
 
   return (
     <div>
@@ -404,6 +782,35 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
       <p className="auth-form-subtitle">
         Start finding better products in seconds — free forever.
       </p>
+
+      <div className="auth-google-wrap">
+        {isGoogleSignupLoading ? (
+          <button type="button" disabled className="auth-submit-btn">
+            <Loader2 className="size-4 animate-spin" />
+            Signing up...
+          </button>
+        ) : (
+          <GoogleLogin
+            onSuccess={submitGoogle}
+            onError={() => {
+              const errorMessage = "Google sign-up failed. Please try again.";
+
+              form.setError("root.server", {
+                type: "server",
+                message: errorMessage,
+              });
+
+              setMessage({
+                type: "error",
+                text: errorMessage,
+              });
+
+              toast.error(errorMessage);
+            }}
+            width="100%"
+          />
+        )}
+      </div>
 
       <Divider />
 
@@ -413,7 +820,8 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
           type="text"
           placeholder="Abhishek Maniyar"
           disabled={isLoading}
-          {...form.register("name", { required: true })}
+          registration={form.register("name")}
+          error={form.formState.errors.name}
         />
 
         <Field
@@ -421,7 +829,8 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
           type="email"
           placeholder="you@example.com"
           disabled={isLoading}
-          {...form.register("email", { required: true })}
+          registration={form.register("email")}
+          error={form.formState.errors.email}
         />
 
         <PasswordField
@@ -430,7 +839,8 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
           show={showPassword}
           setShow={setShowPassword}
           disabled={isLoading}
-          register={form.register("password", { required: true })}
+          registration={form.register("password")}
+          error={form.formState.errors.password}
         />
 
         <PasswordField
@@ -439,15 +849,23 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
           show={showConfirmPassword}
           setShow={setShowConfirmPassword}
           disabled={isLoading}
-          register={form.register("confirmPassword", { required: true })}
+          registration={form.register("confirmPassword")}
+          error={form.formState.errors.confirmPassword}
         />
 
-        {message && <MessageBox message={message} />}
+        {(message || form.formState.errors.root?.server?.message) && (
+          <MessageBox
+            message={{
+              type: message?.type || "error",
+              text:
+                form.formState.errors.root?.server?.message ||
+                message?.text ||
+                "Signup failed. Try again.",
+            }}
+          />
+        )}
 
-        <SubmitButton
-          isLoading={registerMutation.isPending}
-          disabled={isLoading}
-        >
+        <SubmitButton isLoading={isManualSignupLoading} disabled={isLoading}>
           Create account
         </SubmitButton>
       </form>
@@ -462,15 +880,34 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
   );
 };
 
+type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "name"> & {
+  label: string;
+  registration: UseFormRegisterReturn;
+  error?: FieldError;
+};
+
 const Field = ({
   label,
   type,
   placeholder,
+  error,
+  registration,
+  className,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string }) => (
+}: FieldProps) => (
   <label className="auth-field">
     <span>{label}</span>
-    <input type={type} placeholder={placeholder} {...props} />
+
+    <input
+      type={type}
+      placeholder={placeholder}
+      aria-invalid={Boolean(error)}
+      className={className}
+      {...registration}
+      {...props}
+    />
+
+    {error?.message && <ErrorText>{error.message}</ErrorText>}
   </label>
 );
 
@@ -479,17 +916,19 @@ const PasswordField = ({
   placeholder,
   show,
   setShow,
-  register,
+  registration,
   rightLink,
   disabled,
+  error,
 }: {
   label: string;
   placeholder?: string;
   show: boolean;
   setShow: (value: boolean) => void;
-  register: any;
+  registration: UseFormRegisterReturn;
   rightLink?: ReactNode;
   disabled?: boolean;
+  error?: FieldError;
 }) => (
   <label className="auth-field">
     <span className="auth-field-top">
@@ -502,14 +941,21 @@ const PasswordField = ({
         type={show ? "text" : "password"}
         placeholder={placeholder}
         disabled={disabled}
-        {...register}
+        aria-invalid={Boolean(error)}
+        {...registration}
       />
 
       <button type="button" onClick={() => setShow(!show)} disabled={disabled}>
         {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>
     </span>
+
+    {error?.message && <ErrorText>{error.message}</ErrorText>}
   </label>
+);
+
+const ErrorText = ({ children }: { children: ReactNode }) => (
+  <span className="mt-1 text-xs font-medium text-red-500">{children}</span>
 );
 
 const Divider = () => (
@@ -541,10 +987,10 @@ const SubmitButton = ({
 
 const MessageBox = ({ message }: { message: Exclude<Message, null> }) => (
   <div
-    className={`rounded-2xl px-4 py-3 text-sm ${
+    className={`rounded-2xl px-4 py-3 text-sm font-medium ${
       message.type === "error"
-        ? "bg-red-500/10 text-red-200"
-        : "bg-green-500/10 text-green-200"
+        ? "bg-red-500/10 text-red-500"
+        : "bg-green-500/10 text-green-500"
     }`}
   >
     {message.text}
