@@ -9,8 +9,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      host: "::",
+      host: true,
       port: Number(env.VITE_PORT) || 8080,
+      watch: {
+        usePolling: true,
+      },
     },
 
     preview: {
