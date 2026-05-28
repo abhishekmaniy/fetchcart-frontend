@@ -9,18 +9,18 @@ on:
 
 jobs:
   build-and-upload:
-    name: Build and Upload to R2
+    name: Build and Upload Frontend to R2
     runs-on: ubuntu-latest
 
     env:
       NODE_VERSION: 20
 
-      # Vite build-time environment variables
-      VITE_API_URL: ${{ secrets.VITE_API_URL }}
+      # Vite frontend environment variables
+      VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
       VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
-      VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
+      VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
 
-      # R2 / S3-compatible configuration
+      # Cloudflare R2 credentials
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: auto
@@ -40,12 +40,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate frontend environment variables
+        run: |
+          test -n "$VITE_BACKEND_URL" || (echo "VITE_BACKEND_URL is missing" && exit 1)
+          test -n "$VITE_WS_URL" || (echo "VITE_WS_URL is missing" && exit 1)
+          test -n "$VITE_GOOGLE_CLIENT_ID" || (echo "VITE_GOOGLE_CLIENT_ID is missing" && exit 1)
+          echo "Frontend environment variables are present"
+
       - name: Build frontend
         run: npm run build
 
       - name: Verify build output
         run: |
-          test -d dist
+          test -d dist || (echo "dist folder not found" && exit 1)
           ls -la dist
 
       - name: Install AWS CLI v2
@@ -54,6 +61,16 @@ jobs:
           unzip -q awscliv2.zip
           sudo ./aws/install --update
           aws --version
+
+      - name: Validate R2 environment variables
+        run: |
+          test -n "$R2_ACCOUNT_ID" || (echo "R2_ACCOUNT_ID is missing" && exit 1)
+          test -n "$R2_BUCKET_NAME" || (echo "R2_BUCKET_NAME is missing" && exit 1)
+          test -n "$AWS_ACCESS_KEY_ID" || (echo "R2_ACCESS_KEY_ID is missing" && exit 1)
+          test -n "$AWS_SECRET_ACCESS_KEY" || (echo "R2_SECRET_ACCESS_KEY is missing" && exit 1)
+          echo "R2 environment variables are present"
+          echo "R2 endpoint: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          echo "R2 bucket: ${R2_BUCKET_NAME}"
 
       - name: Upload static assets with long cache
         run: |
