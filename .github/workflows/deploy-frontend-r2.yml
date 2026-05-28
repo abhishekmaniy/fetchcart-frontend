@@ -11,6 +11,7 @@ jobs:
   build-and-upload:
     name: Build and Upload Frontend to R2
     runs-on: ubuntu-latest
+    environment: Production
 
     env:
       NODE_VERSION: 20
