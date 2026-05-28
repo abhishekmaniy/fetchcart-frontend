@@ -59,7 +59,7 @@ const getApiErrorMessage = (
   return fallback;
 };
 
-const ResetPassword = () => {
+const ResetPasswordPage = () => {
   const { token } = useParams<{ token: string }>();
 
   const navigate = useNavigate();
@@ -360,4 +360,4 @@ const PasswordInput = ({
   );
 };
 
-export default ResetPassword;
+export default ResetPasswordPage;

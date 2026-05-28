@@ -41,9 +41,8 @@ const getApiErrorMessage = (
   return fallback;
 };
 
-const VerifyEmail = () => {
-  const { userId, token } = useParams<{
-    userId: string;
+const VerifyEmailPage = () => {
+  const { token } = useParams<{
     token: string;
   }>();
 
@@ -67,7 +66,7 @@ const VerifyEmail = () => {
 
       hasRunRef.current = true;
 
-      if (!userId || !token) {
+      if (!token) {
         const errorMessage = "Invalid verification link.";
 
         setStatus("error");
@@ -86,7 +85,6 @@ const VerifyEmail = () => {
         setMessage("Securing your account and verifying your email...");
 
         const data = await verifyEmailMutation.mutateAsync({
-          userId,
           token,
         });
 
@@ -136,7 +134,6 @@ const VerifyEmail = () => {
 
     handleVerifyEmail();
   }, [
-    userId,
     token,
     navigate,
     logout,
@@ -237,4 +234,4 @@ const VerifyEmail = () => {
   );
 };
 
-export default VerifyEmail;
+export default VerifyEmailPage;

@@ -7,19 +7,18 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
-import AuthPage from "./pages/AuthPage";
-import Checkout from "./pages/Checkout";
-import Community from "./pages/Community";
-import Compare from "./pages/Compare";
-import CompareCreatePage from "./pages/CompareCreate";
-import Dashboard from "./pages/Dashboard";
-import Index from "./pages/LandingPage/Index";
-import NotFound from "./pages/NotFound";
-import Search from "./pages/Search";
 import { useAppAuth } from "./hooks/useAppAuth";
-import History from "./pages/History";
-import VerifyEmail from "./pages/VerifyEmail";
-import ResetPassword from "./pages/ResetPassword";
+import AuthPage from "./pages/AuthPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import CompareCreatePage from "./pages/CompareCreatePage";
+import ComparePage from "./pages/ComparePage";
+import History from "./pages/HistoryPage";
+import Index from "./pages/LandingPage";
+import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPasswordPage";
+import Search from "./pages/SearchPage";
+import SearchPage from "./pages/SearchCreatePage";
+import VerifyEmail from "./pages/VerifyEmailPage";
 
 const queryClient = new QueryClient();
 
@@ -81,7 +80,7 @@ const App = () => {
                 path="/search"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <SearchPage />
                   </ProtectedRoute>
                 }
               />
@@ -111,16 +110,7 @@ const App = () => {
                 path="/compare/:compareId"
                 element={
                   <ProtectedRoute>
-                    <Compare />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/community"
-                element={
-                  <ProtectedRoute>
-                    <Community />
+                    <ComparePage />
                   </ProtectedRoute>
                 }
               />
@@ -129,7 +119,7 @@ const App = () => {
                 path="/checkout"
                 element={
                   <ProtectedRoute>
-                    <Checkout />
+                    <CheckoutPage />
                   </ProtectedRoute>
                 }
               />

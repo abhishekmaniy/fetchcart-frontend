@@ -1,10 +1,10 @@
 import HistoryPageContent from "@/components/HistoryPageContent";
-import Header from "@/components/SmartSearch/Header";
-import Sidebar from "@/components/SmartSearch/Sidebar";
+import Header from "@/components/common/Header";
+import Sidebar from "@/components/common/Sidebar";
 
 type Tab = "search" | "compare" | "history";
 
-const History = () => {
+const HistoryPage = () => {
  
 
   return (
@@ -33,4 +33,4 @@ const History = () => {
   );
 };
 
-export default History;
+export default HistoryPage;

@@ -1,17 +1,13 @@
 import CompareCreate from "@/components/CompareCreate";
-import Header from "@/components/SmartSearch/Header";
-import Sidebar from "@/components/SmartSearch/Sidebar";
+import Header from "@/components/common/Header";
+import Sidebar from "@/components/common/Sidebar";
 
 const CompareCreatePage = () => {
-
   return (
     <div className="h-screen overflow-hidden bg-background">
-      <Header
-        setSelectedCompare={() => {}}
-        setSelectedSearch={() => {}}
-      />
+      <Header setSelectedCompare={() => {}} setSelectedSearch={() => {}} />
 
-      <div className="flex h-[calc(100vh-118px)] min-h-0 flex-col overflow-hidden sm:h-[calc(100vh-122px)] lg:h-[calc(100vh-83px)] lg:flex-row">
+      <div className="flex h-[calc(100vh-73px)] min-h-0 overflow-hidden lg:h-[calc(100vh-83px)] lg:flex-row">
         <Sidebar />
 
         <main className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-hero px-3 py-6 sm:px-5 sm:py-8 lg:px-8">

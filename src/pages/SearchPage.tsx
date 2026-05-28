@@ -1,17 +1,16 @@
-import CompareResults from "@/components/CompareResults";
-import Header from "@/components/SmartSearch/Header";
-import Sidebar from "@/components/SmartSearch/Sidebar";
+import SearchResults from "@/components/SearchResults";
+import Header from "@/components/common/Header";
+import Sidebar from "@/components/common/Sidebar";
+import { useNavigate } from "react-router-dom";
 
-const Compare = () => {
+const SearchPage = () => {
+  const navigate = useNavigate();
 
   return (
     <div className="h-screen overflow-hidden bg-background">
-      <Header
-        setSelectedCompare={() => {}}
-        setSelectedSearch={() => {}}
-      />
+      <Header setSelectedCompare={() => {}} setSelectedSearch={() => {}} />
 
-      <div className="flex h-[calc(100vh-118px)] min-h-0 flex-col overflow-hidden sm:h-[calc(100vh-122px)] lg:h-[calc(100vh-83px)] lg:flex-row">
+      <div className="flex h-[calc(100vh-73px)] min-h-0 overflow-hidden lg:h-[calc(100vh-83px)] lg:flex-row">
         <Sidebar />
 
         <main className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-hero px-3 py-5 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
@@ -22,7 +21,7 @@ const Compare = () => {
           </div>
 
           <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col">
-            <CompareResults />
+            <SearchResults onNewSearch={() => navigate("/search")} />
           </div>
         </main>
       </div>
@@ -30,4 +29,4 @@ const Compare = () => {
   );
 };
 
-export default Compare;
+export default SearchPage;

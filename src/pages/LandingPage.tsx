@@ -1,4 +1,4 @@
-import Header from "@/components/SmartSearch/Header";
+import Header from "@/components/common/Header";
 import { useAppStore } from "@/store/app.store";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -25,7 +25,7 @@ import {
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
-const Index = () => {
+const LandingPage = () => {
   const { isAuthenticated } = useAppStore();
 
   if (isAuthenticated === true) {
@@ -34,7 +34,7 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      <Header/>
+      <Header />
       <Hero />
       <Logos />
       <Features />
@@ -48,7 +48,7 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default LandingPage;
 
 function Nav() {
   const navigate = useNavigate();
@@ -159,7 +159,9 @@ function Hero() {
           className="inline-flex max-w-full items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-[10px] font-medium text-muted-foreground shadow-soft backdrop-blur-md sm:px-3.5 sm:text-[11px]"
         >
           <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary" />
-          <span className="truncate">New · AI-powered shopping for everyone</span>
+          <span className="truncate">
+            New · AI-powered shopping for everyone
+          </span>
         </motion.div>
 
         <motion.h1
@@ -258,20 +260,19 @@ function Hero() {
           />
 
           <div className="relative z-20 rounded-[1.65rem] border border-border/60 bg-background/70 p-2.5 shadow-elegant backdrop-blur-xl sm:rounded-3xl sm:p-3 md:p-4">
-            <div className="flex items-center gap-2 rounded-2xl bg-card/70 px-3 py-3 sm:gap-3 sm:px-4">
-              <Search className="h-5 w-5 shrink-0 text-primary" />
+            <div className="flex items-start gap-2 rounded-2xl bg-card/70 px-3 py-3 sm:items-center sm:gap-3 sm:px-4">
+              {/* <Search className="mt-0.5 h-5 w-5 shrink-0 text-primary sm:mt-0" /> */}
 
-              <span className="min-w-0 truncate text-left text-sm text-foreground/90 sm:text-base">
+              <span className="min-w-0 flex-1 whitespace-normal break-words text-left text-sm leading-snug text-foreground/90 sm:text-base">
                 noise cancelling headphones under $300
               </span>
 
               <div className="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                AI
+                <Search className="h-4.5 w-4.5 text-primary" />
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 md:gap-3">
+            <div className="mt-3 grid grid-cols-3 gap-2 md:gap-3">
               {[
                 {
                   label: "Best price",
@@ -291,14 +292,14 @@ function Hero() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-xl bg-card/60 px-3 py-2.5 text-left"
+                  className="rounded-xl bg-card/60 px-2 py-2 text-left sm:px-3 sm:py-2.5"
                 >
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <item.icon className="h-3.5 w-3.5" />
-                    {item.label}
+                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground sm:gap-1.5 sm:text-[11px]">
+                    <item.icon className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />
+                    <span className="truncate">{item.label}</span>
                   </div>
 
-                  <div className="mt-0.5 text-sm font-semibold">
+                  <div className="mt-0.5 text-xs font-semibold sm:text-sm">
                     {item.value}
                   </div>
                 </div>
@@ -486,12 +487,10 @@ function Features() {
   const [activeFeature, setActiveFeature] = useState(features[0]);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Use ref for rotation angle — no re-renders on every tick
   const rotationRef = useRef(0);
   const animFrameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  // Each node gets its own ref so we can update its transform directly via DOM
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const labelRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
@@ -502,17 +501,17 @@ function Features() {
     const animate = (timestamp: number) => {
       if (!isPaused) {
         const delta = lastTimeRef.current ? timestamp - lastTimeRef.current : 0;
-        // ~0.35 degrees per 40ms = ~8.75 deg/sec
         rotationRef.current = (rotationRef.current + delta * 0.009) % 360;
 
-        // Directly mutate DOM transforms — zero React re-renders
         features.forEach((_, index) => {
           const node = nodeRefs.current[index];
           if (!node) return;
+
           const angle = (index / features.length) * 360 + rotationRef.current;
           const radian = (angle * Math.PI) / 180;
           const cx = CENTER + RADIUS * Math.cos(radian);
           const cy = CENTER + RADIUS * Math.sin(radian);
+
           node.style.left = `${cx}px`;
           node.style.top = `${cy}px`;
         });
@@ -523,6 +522,7 @@ function Features() {
     };
 
     animFrameRef.current = requestAnimationFrame(animate);
+
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [isPaused]);
 
@@ -531,7 +531,6 @@ function Features() {
       id="features"
       className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-28"
     >
-      {/* Background blobs */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl sm:h-[520px] sm:w-[520px]" />
         <div className="absolute left-0 top-20 h-56 w-56 rounded-full bg-[#8b5cf6]/10 blur-3xl sm:left-10 sm:h-72 sm:w-72" />
@@ -539,22 +538,23 @@ function Features() {
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-        {/* Section header */}
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             Features
           </p>
+
           <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl md:text-5xl">
             Everything you need to{" "}
             <span className="text-gradient italic">shop better</span>
           </h2>
+
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
             Six tools, one elegant assistant. Built to save you hours and money.
           </p>
         </div>
 
-        {/* Mobile feature selector */}
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:hidden">
+        {/* Mobile small icon selector */}
+        <div className="mt-8 flex items-center justify-center gap-3 lg:hidden">
           {features.map((feature) => {
             const Icon = feature.icon;
             const isActive = activeFeature.id === feature.id;
@@ -563,52 +563,30 @@ function Features() {
               <button
                 key={feature.id}
                 type="button"
+                aria-label={`Show ${feature.title}`}
+                title={feature.title}
                 onClick={() => {
                   setActiveFeature(feature);
                   setIsPaused(true);
                 }}
-                className={`rounded-2xl border p-3 text-left shadow-soft transition-all ${
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-soft transition-all duration-300 ${
                   isActive
-                    ? "border-primary/40 bg-primary-gradient text-white shadow-glow"
-                    : "border-border/60 bg-background/80 text-foreground hover:border-primary/30"
+                    ? "scale-110 border-primary/40 bg-primary-gradient text-white shadow-glow"
+                    : "border-border/60 bg-background/80 text-primary hover:border-primary/30 hover:bg-card"
                 }`}
               >
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                    isActive ? "bg-white/15" : "bg-card"
-                  }`}
-                >
-                  <Icon
-                    className={`h-4 w-4 ${
-                      isActive ? "text-white" : "text-primary"
-                    }`}
-                  />
-                </div>
-
-                <div className="mt-3 text-sm font-semibold leading-snug">
-                  {feature.title}
-                </div>
-
-                <div
-                  className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-                    isActive ? "text-white/75" : "text-muted-foreground"
-                  }`}
-                >
-                  {feature.status}
-                </div>
+                <Icon className="h-5 w-5" />
               </button>
             );
           })}
         </div>
 
-        {/* Desktop two-column layout */}
-        <div className="mt-8 flex flex-col items-center gap-8 lg:mt-16 lg:flex-row lg:items-center lg:gap-16">
-          {/* LEFT — orbital diagram */}
+        <div className="mt-6 flex flex-col items-center gap-8 lg:mt-16 lg:flex-row lg:items-center lg:gap-16">
+          {/* Desktop orbital diagram */}
           <div
             className="relative hidden shrink-0 lg:block"
             style={{ width: 480, height: 480 }}
           >
-            {/* Orbit rings */}
             <div
               className="absolute rounded-full border border-border/40"
               style={{ width: 420, height: 420, top: 30, left: 30 }}
@@ -622,7 +600,6 @@ function Features() {
               style={{ width: 480, height: 480, top: 0, left: 0 }}
             />
 
-            {/* Center node */}
             <div
               className="absolute z-10 flex h-20 w-20 items-center justify-center rounded-full bg-primary-gradient shadow-glow"
               style={{
@@ -636,7 +613,6 @@ function Features() {
               <Sparkles className="h-8 w-8 text-white" />
             </div>
 
-            {/* Orbiting nodes — positioned via DOM refs, no re-renders */}
             {features.map((feature, index) => {
               const initialAngle = (index / features.length) * 360;
               const initialRadian = (initialAngle * Math.PI) / 180;
@@ -667,7 +643,6 @@ function Features() {
                     top: initialCy,
                     transform: "translate(-50%, -50%)",
                     zIndex: 30,
-                    // Smooth scale transition only — no position transition (causes jerk)
                     transition:
                       "box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease",
                     willChange: "left, top",
@@ -679,6 +654,7 @@ function Features() {
                   }`}
                 >
                   <Icon className="h-5 w-5" />
+
                   <span
                     ref={(el) => {
                       labelRefs.current[index] = el;
@@ -688,10 +664,6 @@ function Features() {
                         ? "border-primary/30 bg-primary/10 text-primary"
                         : "border-border/60 bg-background/90 text-muted-foreground"
                     }`}
-                    style={{
-                      transition:
-                        "color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease",
-                    }}
                   >
                     {feature.title}
                   </span>
@@ -700,13 +672,12 @@ function Features() {
             })}
           </div>
 
-          {/* RIGHT — active feature detail card */}
+          {/* Feature detail card */}
           <div className="w-full max-w-xl lg:max-w-none lg:flex-1">
             <motion.div
               key={activeFeature.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
               transition={{
                 duration: 0.5,
                 ease: [0.25, 0.46, 0.45, 0.94],
@@ -766,6 +737,7 @@ function Features() {
                     {activeFeature.energy}%
                   </span>
                 </div>
+
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <motion.div
                     initial={{ width: 0 }}
@@ -776,7 +748,6 @@ function Features() {
                 </div>
               </motion.div>
 
-              {/* Dot nav */}
               <div className="mt-6 flex items-center gap-2">
                 {features.map((f) => (
                   <button
@@ -807,7 +778,10 @@ function VideoDemo() {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (
-    <section id="demo" className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-28">
+    <section
+      id="demo"
+      className="relative overflow-hidden bg-background py-16 sm:py-20 lg:py-28"
+    >
       <div className="mx-auto max-w-5xl px-4 text-center sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
           Live Demo
@@ -1139,7 +1113,9 @@ function Pricing() {
               </h3>
 
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="font-display text-4xl sm:text-5xl">{plan.price}</span>
+                <span className="font-display text-4xl sm:text-5xl">
+                  {plan.price}
+                </span>
                 <span
                   className={`text-sm ${
                     plan.featured

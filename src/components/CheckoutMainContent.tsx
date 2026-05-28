@@ -1,6 +1,6 @@
-import SearchInterface from "../SearchInterface";
+import Checkout from "./Checkout";
 
-const MainContent = () => {
+const CheckoutMainContent = () => {
   return (
     <main className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-hero px-3 py-6 sm:px-5 sm:py-8 lg:px-8">
       <div className="pointer-events-none fixed inset-0 -z-10">
@@ -10,10 +10,10 @@ const MainContent = () => {
       </div>
 
       <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col">
-        <SearchInterface />
+        <Checkout />
       </div>
     </main>
   );
 };
 
-export default MainContent;
+export default CheckoutMainContent;

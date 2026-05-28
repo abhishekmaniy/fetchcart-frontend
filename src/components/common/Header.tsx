@@ -1,20 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { useAppAuth } from "@/hooks/useAppAuth";
 import type { AppUser, UserPlan } from "@/types/auth.types";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
   ChevronDown,
   Crown,
+  HelpCircle,
   Laptop,
   LogOut,
+  Menu,
   Moon,
   Sun,
   User,
+  X,
   Zap,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  sidebarItems,
+  getActiveTabFromPath,
+} from "@/components/common/Sidebar";
 
 type TabType = "search" | "compare" | "history";
 
@@ -109,7 +116,7 @@ const Header = ({
 
   useEffect(() => {
     const savedTheme = localStorage.getItem(
-      THEME_STORAGE_KEY
+      THEME_STORAGE_KEY,
     ) as ThemeMode | null;
 
     const initialThemeMode: ThemeMode =
@@ -128,7 +135,7 @@ const Header = ({
 
     const handleSystemThemeChange = () => {
       const currentThemeMode = localStorage.getItem(
-        THEME_STORAGE_KEY
+        THEME_STORAGE_KEY,
       ) as ThemeMode | null;
 
       if (!currentThemeMode || currentThemeMode === "system") {
@@ -218,11 +225,10 @@ function UserMenu({
 
   const initials = useMemo(
     () => getUserInitials(user?.name, user?.email),
-    [user?.name, user?.email]
+    [user?.name, user?.email],
   );
 
-  const avatarSizeClass =
-    size === "sm" ? "h-8 w-8 text-xs" : "h-9 w-9 text-sm";
+  const avatarSizeClass = size === "sm" ? "h-8 w-8 text-xs" : "h-9 w-9 text-sm";
 
   const ThemeIcon = getThemeIcon(themeMode);
 
@@ -320,7 +326,9 @@ function UserMenu({
 
           <div className="p-4">
             <div className="flex items-center gap-3">
-              <span className={`block rounded-full ${getAvatarRingClass(plan)}`}>
+              <span
+                className={`block rounded-full ${getAvatarRingClass(plan)}`}
+              >
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-gradient text-base font-semibold text-white shadow-elegant">
                   {initials}
                 </span>
@@ -569,6 +577,19 @@ function DashboardHeader({
   onLogout,
 }: SharedHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const activeTab = getActiveTabFromPath(location.pathname);
+
+  const handleNavigate = (path: string) => {
+    setMobileSidebarOpen(false);
+
+    if (location.pathname !== path) {
+      navigate(path);
+    }
+  };
 
   return (
     <>
@@ -576,70 +597,48 @@ function DashboardHeader({
         <div className="absolute inset-x-0 top-0 h-px bg-primary-gradient" />
 
         <div className="mx-auto max-w-[1510px]">
-          <div className="glass shadow-soft flex w-full flex-col gap-2 rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5 sm:px-4 lg:flex-row lg:items-center lg:justify-between lg:gap-3">
-            <div className="flex min-w-0 items-center justify-between gap-2 lg:flex-1">
-              <button
-                type="button"
-                onClick={() => navigate("/search")}
-                className="flex min-w-0 items-center gap-2 font-semibold tracking-tight"
-              >
-                <img
-                  src="/logo.svg"
-                  alt="FetchCart AI logo"
-                  className="h-9 w-9 shrink-0 sm:h-10 sm:w-10 lg:h-9 lg:w-9"
-                  draggable={false}
-                />
+          <div className="glass shadow-soft flex w-full items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5 sm:px-4">
+            {/* Mobile menu button */}
+            <button
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/70 text-foreground transition-all hover:bg-accent lg:hidden"
+              aria-label="Open sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
 
-                <span className="truncate text-lg font-semibold tracking-tight sm:text-xl">
-                  FetchCart <span className="text-gradient">AI</span>
-                </span>
-              </button>
+            {/* Desktop logo */}
+            <button
+              type="button"
+              onClick={() => navigate("/search")}
+              className="hidden min-w-0 items-center gap-2 font-semibold tracking-tight lg:flex"
+            >
+              <img
+                src="/logo.svg"
+                alt="FetchCart AI logo"
+                className="h-9 w-9 shrink-0"
+                draggable={false}
+              />
 
-              <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
-                <Button
-                  size="sm"
-                  onClick={() => navigate("/checkout")}
-                  className="h-9 rounded-xl bg-primary-gradient px-3 text-xs text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:h-10 sm:gap-2 sm:text-sm"
-                >
-                  <Crown className="h-4 w-4" />
-                  <span className="hidden min-[380px]:inline">Pro</span>
-                </Button>
+              <span className="truncate text-xl font-semibold tracking-tight">
+                FetchCart <span className="text-gradient">AI</span>
+              </span>
+            </button>
 
-                {!isAuthInitialized ? (
-                  <div className="h-9 w-9 animate-pulse rounded-full bg-muted sm:h-10 sm:w-10" />
-                ) : isAuthenticated ? (
-                  <UserMenu
-                    user={user}
-                    themeMode={themeMode}
-                    resolvedTheme={resolvedTheme}
-                    onThemeChange={onThemeChange}
-                    onLogout={onLogout}
-                    size="sm"
-                  />
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => navigate("/auth")}
-                    className="h-9 rounded-xl bg-primary-gradient px-3 text-xs text-white shadow-elegant hover:shadow-glow sm:h-10 sm:text-sm"
-                  >
-                    Sign In
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="hidden items-center gap-1.5 sm:gap-2 lg:flex">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <Button
                 size="sm"
                 onClick={() => navigate("/checkout")}
-                className="h-10 gap-2 rounded-xl bg-primary-gradient text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow"
+                className="h-9 rounded-xl bg-primary-gradient px-3 text-xs text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:h-10 sm:gap-2 sm:text-sm"
               >
                 <Crown className="h-4 w-4" />
-                <span>Upgrade Pro</span>
+                <span className="hidden min-[380px]:inline lg:hidden">Pro</span>
+                <span className="hidden lg:inline">Upgrade Pro</span>
               </Button>
 
               {!isAuthInitialized ? (
-                <div className="h-10 w-20 animate-pulse rounded-xl bg-muted" />
+                <div className="h-9 w-9 animate-pulse rounded-full bg-muted sm:h-10 sm:w-10" />
               ) : isAuthenticated ? (
                 <UserMenu
                   user={user}
@@ -647,12 +646,13 @@ function DashboardHeader({
                   resolvedTheme={resolvedTheme}
                   onThemeChange={onThemeChange}
                   onLogout={onLogout}
+                  size="sm"
                 />
               ) : (
                 <Button
                   size="sm"
                   onClick={() => navigate("/auth")}
-                  className="h-10 rounded-xl bg-primary-gradient text-white shadow-elegant hover:shadow-glow"
+                  className="h-9 rounded-xl bg-primary-gradient px-3 text-xs text-white shadow-elegant hover:shadow-glow sm:h-10 sm:text-sm"
                 >
                   Sign In
                 </Button>
@@ -662,7 +662,133 @@ function DashboardHeader({
         </div>
       </header>
 
-      <div aria-hidden="true" className="h-[118px] sm:h-[122px] lg:h-[83px]" />
+      {/* Mobile right drawer */}
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <motion.div
+            className="fixed inset-0 z-[90] lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Backdrop */}
+            <motion.button
+              type="button"
+              aria-label="Close sidebar backdrop"
+              onClick={() => setMobileSidebarOpen(false)}
+              className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            {/* Sidebar */}
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 26,
+              }}
+              className="absolute left-0 top-0 flex h-full w-[86%] max-w-sm flex-col overflow-hidden border-r border-border/70 bg-background/95 shadow-2xl backdrop-blur-xl"
+            >
+              <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
+
+              <div className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl" />
+
+              <div className="relative flex items-center justify-between border-b border-border/70 p-5">
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("/search")}
+                  className="flex min-w-0 items-center gap-3"
+                >
+                  <img
+                    src="/logo.svg"
+                    alt="FetchCart AI logo"
+                    className="h-11 w-11 shrink-0"
+                    draggable={false}
+                  />
+
+                  <span className="truncate text-xl font-semibold tracking-tight">
+                    FetchCart <span className="text-gradient">AI</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSidebarOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card/70 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label="Close sidebar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <nav className="relative min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.tab;
+
+                  return (
+                    <Button
+                      key={item.tab}
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleNavigate(item.path)}
+                      className={`group w-full justify-start gap-3 rounded-2xl px-4 py-6 text-sm font-medium transition-all ${
+                        isActive
+                          ? "sidebar-item-active hover:text-white"
+                          : "sidebar-item hover:translate-x-1"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-accent text-primary group-hover:bg-primary/10"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+
+                      <span>{item.label}</span>
+                    </Button>
+                  );
+                })}
+              </nav>
+
+              <div className="relative shrink-0 border-t border-border/60 p-4">
+                <div className="glass rounded-2xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-primary">
+                      <HelpCircle className="h-4 w-4" />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Need help?
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => handleNavigate("/support")}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Contact support
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div aria-hidden="true" className="h-[73px] lg:h-[83px]" />
     </>
   );
 }
