@@ -48,10 +48,12 @@ jobs:
           test -d dist
           ls -la dist
 
-      - name: Install AWS CLI
+      - name: Install AWS CLI v2
         run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+          sudo ./aws/install --update
+          aws --version
 
       - name: Upload static assets with long cache
         run: |
