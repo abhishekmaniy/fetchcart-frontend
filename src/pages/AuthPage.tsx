@@ -203,7 +203,7 @@ const BrandPanel = () => {
       <div className="auth-left-inner">
         <Link to="/" className="auth-brand">
           <span className="auth-brand-icon">
-            <Sparkles className="size-5" />
+            <img src="/Logo3880.svg" alt="" />
           </span>
           FetchCart <span>AI</span>
         </Link>
