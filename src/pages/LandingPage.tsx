@@ -1442,7 +1442,7 @@ function Footer() {
               className="inline-flex items-center gap-2 font-semibold tracking-tight"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary-gradient shadow-glow">
-                <Sparkles className="h-4 w-4 text-white" />
+                <img src="./public/logo.svg" alt="" />
               </span>
 
               <span>
