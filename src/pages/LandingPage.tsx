@@ -1442,7 +1442,7 @@ function Footer() {
               className="inline-flex items-center gap-2 font-semibold tracking-tight"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary-gradient shadow-glow">
-                <img src="./public/logo.svg" alt="" />
+                <img src="/logo.svg" alt="" />
               </span>
 
               <span>

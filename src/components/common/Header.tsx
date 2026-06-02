@@ -506,7 +506,7 @@ function LandingHeader({
           className="flex min-w-0 items-center gap-2 font-semibold tracking-tight"
         >
           <img
-            src="./public/logo.svg"
+            src="/logo.svg"
             alt="FetchCart AI logo"
             className="h-8 w-8 shrink-0"
             draggable={false}
@@ -706,7 +706,7 @@ function DashboardHeader({
                   className="flex min-w-0 items-center gap-3"
                 >
                   <img
-                    src="./public/logo.svg"
+                    src="/logo.svg"
                     alt="FetchCart AI logo"
                     className="h-11 w-11 shrink-0"
                     draggable={false}
