@@ -1031,27 +1031,28 @@ function Pricing() {
       name: "Free",
       price: "₹0",
       period: "forever",
-      desc: "Perfect for casual shoppers exploring smarter discovery.",
+      desc: "Perfect for users exploring AI-powered product search.",
       features: [
-        "50 AI searches / month",
-        "Basic comparisons",
-        "Deal detection",
-        "Email price alerts",
+        "10 AI searches / month",
+        "Basic product discovery",
+        "No product comparison",
+        "No external product links",
+        "Community support",
       ],
-      cta: "Start free",
+      cta: "Start Free",
       featured: false,
     },
     {
       name: "Pro",
       price: "₹99",
       period: "per month",
-      desc: "For power shoppers who want the full assistant.",
+      desc: "Built for smart shoppers who compare products regularly.",
       features: [
-        "Unlimited AI searches",
-        "Advanced comparisons",
-        "Real-time price tracking",
-        "Personalized recommendations",
-        "Priority support",
+        "Everything in Free",
+        "50 AI searches / month",
+        "15 product comparisons / month",
+        "Product buy links available",
+        "Faster search experience",
       ],
       cta: "Upgrade to Pro",
       featured: true,
@@ -1060,64 +1061,96 @@ function Pricing() {
       name: "Max",
       price: "₹249",
       period: "per month",
-      desc: "Procurement and resellers — share insights across your team.",
+      desc: "For heavy users who want the complete experience.",
       features: [
         "Everything in Pro",
-        "5 member seats",
-        "Bulk price tracking",
-        "API access",
-        "Dedicated success manager",
+        "100 AI searches / month",
+        "50 product comparisons / month",
+        "24/7 customer support",
+        "Priority access to new features",
       ],
-      cta: "Contact sales",
+      cta: "Get Max",
       featured: false,
     },
   ];
 
   return (
-    <section id="pricing" className="relative py-16 sm:py-20 lg:py-28">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">
-            Pricing
+    <section
+      id="pricing"
+      className="relative py-16 sm:py-20 lg:py-28 overflow-hidden"
+    >
+      {/* Background Glow */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        {/* Heading */}
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs uppercase tracking-[0.25em] text-primary font-semibold">
+            Pricing Plans
           </p>
-          <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl md:text-5xl">
-            Simple, <span className="text-gradient italic">honest pricing</span>
+
+          <h2 className="mt-4 font-display text-3xl tracking-tight sm:text-5xl lg:text-6xl">
+            Choose the perfect{" "}
+            <span className="text-gradient italic">plan for you</span>
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Start free. Upgrade when you are ready. Cancel anytime.
+
+          <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
+            Start free and unlock advanced AI product search and comparison
+            features as your needs grow.
           </p>
         </div>
 
-        <div className="mt-10 grid items-stretch gap-5 md:mt-14 md:grid-cols-3">
+        {/* Pricing Cards */}
+        <div className="mt-14 grid gap-6 lg:grid-cols-3">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 35 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.6 }}
-              className={`relative rounded-3xl p-6 transition-shadow sm:p-8 ${
+              className={`relative rounded-[2rem] border backdrop-blur-xl p-7 sm:p-8 transition-all duration-300 hover:-translate-y-1 ${
                 plan.featured
-                  ? "bg-foreground text-background shadow-elegant"
-                  : "glass shadow-soft hover:shadow-elegant"
+                  ? "bg-foreground text-background border-foreground shadow-[0_20px_80px_rgba(0,0,0,0.25)] scale-[1.02]"
+                  : "glass border-border/60 hover:border-primary/40 shadow-soft hover:shadow-elegant"
               }`}
             >
+              {/* Recommended Badge */}
               {plan.featured && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-wider bg-primary-gradient text-white px-3 py-1 rounded-full shadow-glow">
-                  Recommended
-                </span>
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="rounded-full bg-primary-gradient px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow-glow">
+                    Most Popular
+                  </span>
+                </div>
               )}
 
-              <h3 className="text-lg font-semibold tracking-tight">
-                {plan.name}
-              </h3>
+              {/* Plan Name */}
+              <div>
+                <h3 className="text-xl font-semibold tracking-tight">
+                  {plan.name}
+                </h3>
 
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="font-display text-4xl sm:text-5xl">
+                <p
+                  className={`mt-2 text-sm leading-relaxed ${
+                    plan.featured
+                      ? "text-background/70"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {plan.desc}
+                </p>
+              </div>
+
+              {/* Price */}
+              <div className="mt-7 flex items-end gap-1">
+                <span className="font-display text-5xl font-bold">
                   {plan.price}
                 </span>
+
                 <span
-                  className={`text-sm ${
+                  className={`mb-1 text-sm ${
                     plan.featured
                       ? "text-background/60"
                       : "text-muted-foreground"
@@ -1127,33 +1160,43 @@ function Pricing() {
                 </span>
               </div>
 
-              <p
-                className={`mt-3 text-sm ${
-                  plan.featured ? "text-background/70" : "text-muted-foreground"
+              {/* Divider */}
+              <div
+                className={`my-7 h-px w-full ${
+                  plan.featured ? "bg-background/10" : "bg-border/60"
                 }`}
-              >
-                {plan.desc}
-              </p>
+              />
 
-              <ul className="mt-6 space-y-3 text-sm">
+              {/* Features */}
+              <ul className="space-y-4">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2.5">
+                  <li key={feature} className="flex items-start gap-3 text-sm">
                     <span
-                      className={`mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${
-                        plan.featured ? "bg-background/15" : "bg-accent"
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                        plan.featured ? "bg-background/15" : "bg-primary/10"
                       }`}
                     >
-                      <Check className="h-3 w-3" />
+                      <Check className="h-3.5 w-3.5" />
                     </span>
-                    {feature}
+
+                    <span
+                      className={
+                        plan.featured
+                          ? "text-background/90"
+                          : "text-foreground/90"
+                      }
+                    >
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
 
+              {/* CTA */}
               <button
-                className={`mt-8 w-full py-3 rounded-2xl font-medium transition-all ${
+                className={`mt-8 w-full rounded-2xl py-3.5 text-sm font-semibold transition-all duration-300 ${
                   plan.featured
-                    ? "bg-primary-gradient text-white shadow-elegant hover:shadow-glow"
+                    ? "bg-primary-gradient text-white hover:shadow-glow"
                     : "bg-foreground text-background hover:opacity-90"
                 }`}
               >

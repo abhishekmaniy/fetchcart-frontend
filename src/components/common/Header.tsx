@@ -591,6 +591,39 @@ function DashboardHeader({
     }
   };
 
+  const getUpgradeButtonText = () => {
+    if (!isAuthenticated) {
+      return "Upgrade Pro";
+    }
+
+    const userPlan = user?.userPlan?.plan;
+
+    if (userPlan === "FREE") {
+      return "Upgrade Pro";
+    }
+
+    if (userPlan === "PRO") {
+      return "Upgrade Max";
+    }
+
+    if (userPlan === "MAX") {
+      return planExpiresAt
+        ? `Max Active • Expires ${planExpiresAt}`
+        : "Max Plan Active";
+    }
+
+    return "Upgrade";
+  };
+
+  const isMaxUser = user?.userPlan?.plan === "MAX";
+
+  const planExpiresAt = user?.userPlan?.expiresAt
+    ? new Date(user.userPlan.expiresAt).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+      })
+    : null;
+
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/95 px-3 py-3 backdrop-blur-xl sm:px-4 lg:px-6">
@@ -630,11 +663,37 @@ function DashboardHeader({
               <Button
                 size="sm"
                 onClick={() => navigate("/checkout")}
-                className="h-9 rounded-xl bg-primary-gradient px-3 text-xs text-white shadow-elegant transition-all hover:-translate-y-0.5 hover:shadow-glow sm:h-10 sm:gap-2 sm:text-sm"
+                className={`group h-10 rounded-2xl border px-4 text-sm font-medium transition-all duration-300 ${
+                  user?.userPlan?.plan === "MAX"
+                    ? "border-violet-500/30 bg-gradient-to-r from-violet-500/20 via-fuchsia-500/20 to-sky-500/20 text-white shadow-[0_0_30px_rgba(139,92,246,0.25)] hover:shadow-[0_0_40px_rgba(139,92,246,0.35)]"
+                    : "bg-primary-gradient text-white shadow-elegant hover:-translate-y-0.5 hover:shadow-glow"
+                }`}
               >
-                <Crown className="h-4 w-4" />
-                <span className="hidden min-[380px]:inline lg:hidden">Pro</span>
-                <span className="hidden lg:inline">Upgrade Pro</span>
+                <Crown
+                  className={`mr-2 h-4 w-4 ${
+                    user?.userPlan?.plan === "MAX"
+                      ? "text-violet-200"
+                      : "text-white"
+                  }`}
+                />
+
+                {/* Mobile */}
+                <span className="hidden min-[380px]:inline lg:hidden">
+                  {user?.userPlan?.plan === "FREE"
+                    ? "Pro"
+                    : user?.userPlan?.plan === "PRO"
+                      ? "Max"
+                      : "Premium"}
+                </span>
+
+                {/* Desktop */}
+                <span className="hidden lg:inline">
+                  {user?.userPlan?.plan === "FREE"
+                    ? "Upgrade to Pro"
+                    : user?.userPlan?.plan === "PRO"
+                      ? "Upgrade to Max"
+                      : "Manage Subscription"}
+                </span>
               </Button>
 
               {!isAuthInitialized ? (

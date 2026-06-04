@@ -6,11 +6,10 @@ import {
   CreditCard,
   Crown,
   Loader2,
-  Shield,
   Sparkles,
-  Star,
   Zap,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,12 +17,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+
 import { useToast } from "@/hooks/use-toast";
 import { useAppAuth } from "@/hooks/useAppAuth";
 import { useAppStore } from "@/store/app.store";
 import { useRazorpayCheckoutMutation } from "@/hooks/usePayment";
+
 import type { UserPlan } from "@/types/auth.types";
 
 const SEARCH_PAGE_ROUTE = "/search";
@@ -52,37 +54,38 @@ const MONTHLY_PLANS: PlanCardConfig[] = [
   {
     plan: "PRO",
     label: "Pro Monthly",
-    badge: "Popular",
-    price: 499,
-    originalPrice: 799,
-    description: "Best for premium AI product discovery every month.",
+    badge: "Most Popular",
+    price: 99,
+    originalPrice: 149,
+    description:
+      "Perfect for users who frequently search and compare products.",
     icon: Zap,
-    highlighted: false,
+    highlighted: true,
     features: [
-      "Unlimited AI product searches",
-      "Advanced product comparison",
-      "Save liked products",
-      "Smart recommendations",
-      "Faster product extraction",
-      "Priority access to new features",
+      "Everything in Free",
+      "50 AI searches / month",
+      "15 product comparisons / month",
+      "Buy product links available",
+      "Faster AI product discovery",
     ],
   },
+
   {
     plan: "MAX",
     label: "Max Monthly",
     badge: "Best Value",
-    price: 999,
-    originalPrice: 1499,
-    description: "For power users who want the highest limits and fastest flow.",
+    price: 249,
+    originalPrice: 399,
+    description:
+      "Built for heavy users who want higher limits and premium support.",
     icon: Crown,
-    highlighted: true,
+    highlighted: false,
     features: [
       "Everything in Pro",
-      "Highest product search limits",
-      "Advanced comparison insights",
-      "Priority Razorpay verification",
-      "Early access to premium tools",
-      "Best extraction speed and reliability",
+      "100 AI searches / month",
+      "50 product comparisons / month",
+      "24/7 customer support",
+      "Priority access to new features",
     ],
   },
 ];
@@ -108,7 +111,10 @@ const Checkout = () => {
   const { toast } = useToast();
 
   const { user, plan: currentPlan } = useAppAuth();
-  const refreshCurrentUser = useAppStore((state) => state.refreshCurrentUser);
+
+  const refreshCurrentUser = useAppStore(
+    (state) => state.refreshCurrentUser
+  );
 
   const [selectedPlan, setSelectedPlan] = useState<PaidPlan>(() => {
     if (currentPlan === "PRO") return "MAX";
@@ -131,55 +137,59 @@ const Checkout = () => {
   const planExpiresAt = formatDate(user?.userPlan?.expiresAt);
 
   const discount = Math.round(
-    ((selectedPlanConfig.originalPrice - selectedPlanConfig.price) /
+    ((selectedPlanConfig.originalPrice -
+      selectedPlanConfig.price) /
       selectedPlanConfig.originalPrice) *
       100
   );
 
-  const savings = selectedPlanConfig.originalPrice - selectedPlanConfig.price;
+  const savings =
+    selectedPlanConfig.originalPrice -
+    selectedPlanConfig.price;
 
-  const razorpayCheckoutMutation = useRazorpayCheckoutMutation({
-    onSuccess: async () => {
-      await refreshCurrentUser();
+  const razorpayCheckoutMutation =
+    useRazorpayCheckoutMutation({
+      onSuccess: async () => {
+        await refreshCurrentUser();
 
-      toast({
-        title: "Plan upgraded successfully",
-        description: `Your ${selectedPlanConfig.label} plan is now active.`,
-      });
+        toast({
+          title: "Plan upgraded successfully",
+          description: `Your ${selectedPlanConfig.label} plan is now active.`,
+        });
 
-      navigate(SEARCH_PAGE_ROUTE);
-    },
+        navigate(SEARCH_PAGE_ROUTE);
+      },
 
-    onError: (error) => {
-      console.error("RAZORPAY_CHECKOUT_ERROR", error);
+      onError: (error) => {
+        console.error("RAZORPAY_CHECKOUT_ERROR", error);
 
-      toast({
-        title: "Unable to start payment",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Please try again after some time.",
-        variant: "destructive",
-      });
-    },
+        toast({
+          title: "Unable to start payment",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Please try again later.",
+          variant: "destructive",
+        });
+      },
 
-    onPaymentFailed: (response) => {
-      toast({
-        title: "Payment failed",
-        description:
-          response.error.description ||
-          "Your payment could not be completed.",
-        variant: "destructive",
-      });
-    },
+      onPaymentFailed: (response) => {
+        toast({
+          title: "Payment failed",
+          description:
+            response.error.description ||
+            "Your payment could not be completed.",
+          variant: "destructive",
+        });
+      },
 
-    onDismiss: () => {
-      toast({
-        title: "Payment cancelled",
-        description: "You closed the payment window.",
-      });
-    },
-  });
+      onDismiss: () => {
+        toast({
+          title: "Payment cancelled",
+          description: "You closed the payment window.",
+        });
+      },
+    });
 
   const handleUpgrade = () => {
     if (isSelectedPlanAlreadyActive) {
@@ -217,15 +227,18 @@ const Checkout = () => {
               </h1>
 
               <p className="mt-2 text-muted-foreground">
-                Your Max monthly plan is active. You can continue using all
-                premium FetchCart AI features.
+                Your Max monthly plan is active.
               </p>
             </div>
 
             {planExpiresAt && (
               <div className="rounded-xl border bg-muted/40 p-4 text-sm">
-                <span className="text-muted-foreground">Plan expires on: </span>
-                <span className="font-medium">{planExpiresAt}</span>
+                <span className="text-muted-foreground">
+                  Plan expires on:
+                </span>{" "}
+                <span className="font-medium">
+                  {planExpiresAt}
+                </span>
               </div>
             )}
 
@@ -245,18 +258,23 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
       <div className="mx-auto max-w-6xl p-6">
+        {/* Header */}
         <div className="mb-8 flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(-1)}
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
 
           <div>
-            <h1 className="text-2xl font-bold">
-              Choose your FetchCart AI plan
+            <h1 className="text-3xl font-bold">
+              Upgrade your FetchCart plan
             </h1>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Current plan:{" "}
               <span className="font-medium text-foreground">
                 {getPlanLabel(currentPlan)}
@@ -265,6 +283,7 @@ const Checkout = () => {
           </div>
         </div>
 
+        {/* Current Plan */}
         {currentPlan !== "FREE" && (
           <Card className="mb-6 border-primary/20 bg-primary/5">
             <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -286,7 +305,10 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <Button variant="outline" onClick={handleGoToSearch}>
+              <Button
+                variant="outline"
+                onClick={handleGoToSearch}
+              >
                 Go to Search
               </Button>
             </CardContent>
@@ -294,18 +316,25 @@ const Checkout = () => {
         )}
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">
+          {/* Plans */}
           <div className="space-y-6 lg:col-span-2">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {MONTHLY_PLANS.map((planItem) => {
                 const Icon = planItem.icon;
-                const isSelected = selectedPlan === planItem.plan;
-                const planRank = PLAN_ORDER[planItem.plan];
+
+                const isSelected =
+                  selectedPlan === planItem.plan;
+
+                const planRank =
+                  PLAN_ORDER[planItem.plan];
 
                 const isAlreadyIncluded =
-                  currentPlanRank >= planRank && currentPlan !== "FREE";
+                  currentPlanRank >= planRank &&
+                  currentPlan !== "FREE";
 
                 const itemDiscount = Math.round(
-                  ((planItem.originalPrice - planItem.price) /
+                  ((planItem.originalPrice -
+                    planItem.price) /
                     planItem.originalPrice) *
                     100
                 );
@@ -314,7 +343,9 @@ const Checkout = () => {
                   <button
                     key={planItem.plan}
                     type="button"
-                    onClick={() => setSelectedPlan(planItem.plan)}
+                    onClick={() =>
+                      setSelectedPlan(planItem.plan)
+                    }
                     disabled={isAlreadyIncluded}
                     className={`group relative rounded-3xl border bg-card p-1 text-left transition-all ${
                       isSelected
@@ -334,8 +365,9 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    <div className="rounded-[20px] bg-background p-5">
-                      <div className="mb-5 flex items-start justify-between gap-4">
+                    <div className="rounded-[20px] bg-background p-6">
+                      {/* Top */}
+                      <div className="mb-6 flex items-start justify-between gap-4">
                         <div>
                           <div className="mb-3 flex items-center gap-2">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -349,11 +381,11 @@ const Checkout = () => {
                             </Badge>
                           </div>
 
-                          <h2 className="text-xl font-bold">
+                          <h2 className="text-2xl font-bold">
                             {planItem.label}
                           </h2>
 
-                          <p className="mt-1 text-sm text-muted-foreground">
+                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                             {planItem.description}
                           </p>
                         </div>
@@ -365,37 +397,55 @@ const Checkout = () => {
                               : "border-muted-foreground/40"
                           }`}
                         >
-                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                          {isSelected && (
+                            <Check className="h-3.5 w-3.5" />
+                          )}
                         </div>
                       </div>
 
-                      <div className="mb-5">
-                        <div className="flex items-end gap-2">
-                          <span className="text-4xl font-bold">
-                            ₹{planItem.price.toLocaleString("en-IN")}
-                          </span>
+                      {/* Price */}
+                      <div className="mb-6">
+                        <div className="flex items-end gap-3">
+                          <div className="flex items-start gap-1">
+                            <span className="mt-1 text-2xl font-bold">
+                              ₹
+                            </span>
+
+                            <span className="text-5xl font-bold tracking-normal">
+                              {planItem.price.toLocaleString(
+                                "en-IN"
+                              )}
+                            </span>
+                          </div>
 
                           <span className="mb-1 text-sm text-muted-foreground line-through">
-                            ₹{planItem.originalPrice.toLocaleString("en-IN")}
+                            ₹
+                            {planItem.originalPrice.toLocaleString(
+                              "en-IN"
+                            )}
                           </span>
                         </div>
 
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-3 flex items-center gap-2">
                           <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/10">
                             Save {itemDiscount}%
                           </Badge>
 
                           <span className="text-sm text-muted-foreground">
-                            / month
+                            billed monthly
                           </span>
                         </div>
                       </div>
 
-                      <Separator className="mb-5" />
+                      <Separator className="mb-6" />
 
-                      <div className="space-y-3">
+                      {/* Features */}
+                      <div className="space-y-4">
                         {planItem.features.map((feature) => (
-                          <div key={feature} className="flex items-center gap-3">
+                          <div
+                            key={feature}
+                            className="flex items-center gap-3"
+                          >
                             <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40">
                               <Check className="h-3.5 w-3.5 text-green-600" />
                             </div>
@@ -413,6 +463,7 @@ const Checkout = () => {
             </div>
           </div>
 
+          {/* Payment Summary */}
           <div className="space-y-6">
             <Card className="sticky top-6 border-border/70 shadow-sm">
               <CardHeader>
@@ -422,7 +473,7 @@ const Checkout = () => {
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 <div className="rounded-2xl border bg-muted/30 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -430,11 +481,11 @@ const Checkout = () => {
                         Selected Plan
                       </p>
 
-                      <h3 className="mt-1 text-lg font-bold">
+                      <h3 className="mt-1 text-xl font-bold">
                         {selectedPlanConfig.label}
                       </h3>
 
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                         {selectedPlanConfig.description}
                       </p>
                     </div>
@@ -445,40 +496,83 @@ const Checkout = () => {
                       <Zap className="h-6 w-6 text-primary" />
                     )}
                   </div>
+
+                  <div className="mt-5 space-y-3">
+                    {selectedPlanConfig.features.map(
+                      (feature) => (
+                        <div
+                          key={feature}
+                          className="flex items-center gap-3"
+                        >
+                          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40">
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                          </div>
+
+                          <span className="text-sm font-medium">
+                            {feature}
+                          </span>
+                        </div>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Current Plan</span>
-                    <span className="font-medium">{currentPlan}</span>
+                    <span className="text-muted-foreground">
+                      Current Plan
+                    </span>
+
+                    <span className="font-medium">
+                      {currentPlan}
+                    </span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">New Plan</span>
-                    <span className="font-medium">{selectedPlan}</span>
+                    <span className="text-muted-foreground">
+                      New Plan
+                    </span>
+
+                    <span className="font-medium">
+                      {selectedPlan}
+                    </span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Billing</span>
-                    <span className="font-medium">Monthly</span>
+                    <span className="text-muted-foreground">
+                      Billing
+                    </span>
+
+                    <span className="font-medium">
+                      Monthly
+                    </span>
                   </div>
 
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
                       Original Price
                     </span>
+
                     <span className="line-through">
-                      ₹{selectedPlanConfig.originalPrice.toLocaleString("en-IN")}
+                      ₹
+                      {selectedPlanConfig.originalPrice.toLocaleString(
+                        "en-IN"
+                      )}
                     </span>
                   </div>
 
                   <div className="flex justify-between text-green-600">
                     <span>Savings</span>
-                    <span>-₹{savings.toLocaleString("en-IN")}</span>
+
+                    <span>
+                      -₹
+                      {savings.toLocaleString("en-IN")}
+                    </span>
                   </div>
 
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
+
                     <span>{discount}%</span>
                   </div>
 
@@ -486,8 +580,12 @@ const Checkout = () => {
 
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
+
                     <span>
-                      ₹{selectedPlanConfig.price.toLocaleString("en-IN")}
+                      ₹
+                      {selectedPlanConfig.price.toLocaleString(
+                        "en-IN"
+                      )}
                     </span>
                   </div>
                 </div>
@@ -514,7 +612,7 @@ const Checkout = () => {
                   ) : (
                     <>
                       <CreditCard className="mr-2 h-4 w-4" />
-                      Proceed to Razorpay
+                      Upgrade Now
                     </>
                   )}
                 </Button>
@@ -528,7 +626,7 @@ const Checkout = () => {
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground">
-                  Your monthly plan will activate only after successful payment
+                  Your plan activates after successful payment
                   verification.
                 </p>
               </CardContent>
