@@ -90,7 +90,7 @@ const getRedirectPath = (state: unknown) => {
 
 const getApiErrorMessage = (
   error: unknown,
-  fallback = "Something went wrong. Please try again."
+  fallback = "Something went wrong. Please try again.",
 ) => {
   if (
     error &&
@@ -116,7 +116,7 @@ const getApiErrorMessage = (
 
 const applyApiFieldErrors = <TFormValues extends Record<string, unknown>>(
   error: unknown,
-  setError: UseFormSetError<TFormValues>
+  setError: UseFormSetError<TFormValues>,
 ) => {
   const responseData =
     error &&
@@ -229,6 +229,7 @@ const BrandPanel = () => {
               meta="−18% · AI 9.6"
               rotate="-4deg"
               tone="primary"
+              image="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400&auto=format&fit=crop"
             />
 
             <FloatingMini
@@ -237,6 +238,7 @@ const BrandPanel = () => {
               meta="₹99,999 · −12%"
               tone="violet"
               rotate="2deg"
+              image="https://m.media-amazon.com/images/I/61JU2HicMQL._SX679_.jpg"
             />
 
             <FloatingMini
@@ -245,6 +247,7 @@ const BrandPanel = () => {
               meta="4.8★ · 2.4k reviews"
               tone="sky"
               rotate="5deg"
+              image="https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQN9TssnSy0ZsjcsnC4yAJVYCjMYcVOYGOemR5xz049PYkpI1tZVjf8ZVR4SY_zrrwtRuzkga6cd1wCbpKFGc88KBGZa33IoG8XNG6BMZdI7B4UhehoUYNqWsE"
             />
           </div>
         </div>
@@ -270,12 +273,14 @@ const FloatingMini = ({
   meta,
   tone = "primary",
   rotate = "0deg",
+  image,
 }: {
   className?: string;
   title: string;
   meta: string;
   tone?: "primary" | "violet" | "sky";
   rotate?: string;
+  image: string;
 }) => {
   const imageClass = {
     primary: "from-indigo-500 via-violet-500 to-purple-500",
@@ -288,8 +293,10 @@ const FloatingMini = ({
       className={`auth-floating-card ${className}`}
       style={{ transform: `rotate(${rotate})` }}
     >
-      <div
-        className={`auth-card-image bg-gradient-to-br ${imageClass[tone]}`}
+      <img
+        src={image}
+        alt={title}
+        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 mb-2 rounded-sm"
       />
       <div className="auth-card-title">{title}</div>
       <div className="auth-card-meta">{meta}</div>
@@ -322,7 +329,7 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
   const completeLoginFlow = async (
     accessToken: string,
-    successMessage: string
+    successMessage: string,
   ) => {
     setAccessToken(accessToken);
 
@@ -401,7 +408,7 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
     } catch (error) {
       const errorMessage = getApiErrorMessage(
         error,
-        "Failed to send reset password link. Please try again."
+        "Failed to send reset password link. Please try again.",
       );
 
       form.setError("root.server", {
@@ -435,14 +442,14 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
       await completeLoginFlow(
         data.accessToken,
-        data.message || "Login successful"
+        data.message || "Login successful",
       );
     } catch (error) {
       applyApiFieldErrors<LoginFormValues>(error, form.setError);
 
       const errorMessage = getApiErrorMessage(
         error,
-        "Login failed. Try again."
+        "Login failed. Try again.",
       );
 
       form.setError("root.server", {
@@ -489,7 +496,7 @@ const LoginForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
       await completeLoginFlow(
         data.accessToken,
-        data.message || "Google login successful"
+        data.message || "Google login successful",
       );
     } catch (error) {
       const errorMessage = getApiErrorMessage(error, "Google login failed.");
@@ -634,7 +641,7 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
   const completeGoogleSignupFlow = async (
     accessToken: string,
-    successMessage: string
+    successMessage: string,
   ) => {
     setAccessToken(accessToken);
 
@@ -699,7 +706,7 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
       const errorMessage = getApiErrorMessage(
         error,
-        "Signup failed. Try again."
+        "Signup failed. Try again.",
       );
 
       form.setError("root.server", {
@@ -750,12 +757,12 @@ const RegisterForm = ({ onSwitch }: { onSwitch: () => void }) => {
 
       await completeGoogleSignupFlow(
         data.accessToken,
-        data.message || "Google signup successful"
+        data.message || "Google signup successful",
       );
     } catch (error) {
       const errorMessage = getApiErrorMessage(
         error,
-        "Google signup failed. Please try again."
+        "Google signup failed. Please try again.",
       );
 
       form.setError("root.server", {
