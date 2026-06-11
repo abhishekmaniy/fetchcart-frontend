@@ -489,6 +489,7 @@
   margin-top: 1.4rem;
   overflow: hidden;
   border-radius: 999px;
+  justify-content: center;
 }
 
 /* Form grid */
